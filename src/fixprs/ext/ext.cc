@@ -9,6 +9,7 @@
 #include <numpy/arrayobject.h>
 
 #include "ThreadPool.h"
+#include "column.hh"
 #include "csv2.hh"
 #include "fast_double_parser.h"
 

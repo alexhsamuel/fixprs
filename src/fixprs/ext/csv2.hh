@@ -9,16 +9,9 @@ using std::experimental::optional;
 // FIXME: static assert that this is right.
 using float64_t = double;
 
+#include "str_arr.hh"
+
 //------------------------------------------------------------------------------
-
-struct StrArr
-{
-  size_t len;
-  size_t width;
-  std::vector<char> chars;
-  std::string name;
-};
-
 
 template<class T>
 struct NumberArr

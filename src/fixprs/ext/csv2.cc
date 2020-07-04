@@ -6,58 +6,16 @@
 
 #include "column.hh"
 #include "csv2.hh"
+#include "str_arr.hh"
 
 // FIXME: UTF-8 (and other encodings?)
 
 //------------------------------------------------------------------------------
 
-StrArr
-parse_str_arr(
-  Column const& col,
-  bool const header=true)
-{
-  auto len = col.size();
-
-  size_t i = 0;
-  auto fields = col.begin();
-
-  std::string name;
-  if (header) {
-    if (len == 0)
-      // Missing header.
-      // FIXME: Check this earlier?
-      return {};
-
-    auto const& n = *fields;
-    name = std::string{n.ptr, n.len};
-    ++fields;
-    --len;
-  }
-
-  if (len == 0)
-    return StrArr{0, 0, {}, name};
-
-  // Get the column width, which is the longest string length.
-  auto const width = col.max_width();
-  // Allocate.
-  std::vector<char> chars(len * width, 0);
-  char* base = chars.data();
-
-  for (; fields != col.end(); ++fields) {
-    auto const field = *fields;
-    memcpy(base + i++ * width, field.ptr, field.len);
-  }
-
-  return {len, width, std::move(chars), name};
-}
-
-
-//------------------------------------------------------------------------------
-
-inline bool oadd(uint64_t a, uint64_t b, uint64_t& r) { return __builtin_uaddl_overflow(a, b, &r); }
-inline bool oadd( int64_t a,  int64_t b,  int64_t& r) { return __builtin_saddl_overflow(a, b, &r); }
-inline bool omul(uint64_t a, uint64_t b, uint64_t& r) { return __builtin_umull_overflow(a, b, &r); }
-inline bool omul( int64_t a,  int64_t b,  int64_t& r) { return __builtin_smull_overflow(a, b, &r); }
+inline bool oadd(uint64_t a, uint64_t b, uint64_t& r) { return __builtin_uaddll_overflow(a, b, &r); }
+inline bool oadd( int64_t a,  int64_t b,  int64_t& r) { return __builtin_saddll_overflow(a, b, &r); }
+inline bool omul(uint64_t a, uint64_t b, uint64_t& r) { return __builtin_umulll_overflow(a, b, &r); }
+inline bool omul( int64_t a,  int64_t b,  int64_t& r) { return __builtin_smulll_overflow(a, b, &r); }
 
 template<class T> inline optional<T> parse(Buffer const buf);
 

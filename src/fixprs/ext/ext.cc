@@ -45,7 +45,6 @@ load_file(
 
     for (auto&& result : results) {
       Array const& arr = result.get();
-      std::cout << arr;
 
       std::string name;
       PyObject* nda = NULL;

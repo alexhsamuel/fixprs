@@ -97,6 +97,18 @@ load_file(
 }
 
 
+/*
+
+parse(obj)
+
+ :param obj:
+  The text to parse.  Can be anything that supports a readable memoryview,
+  such as `bytes` or `mmap.mmap`.
+:param names:
+  Names of columns.  
+
+*/
+
 PyObject*
 parse(
   Buffer const& buf)
@@ -104,22 +116,32 @@ parse(
   auto const cols = split_columns(buf);
 
   PyObject* ndas = PyDict_New();
-  assert(ndas != NULL);
+  if (ndas == nullptr)
+    return nullptr;
+
+  bool ok = true;
 
   for (auto const& col : cols) {
-    // FIXME: Parse directly into the ndarray!
-    // FIXME: This can fail if decoding.
-    auto const str_arr = parse_str_arr(col);
-    npy_intp len = str_arr.len;
-    auto nda = PyArray_New(
-      &PyArray_Type, 1, &len, NPY_STRING, NULL, NULL, str_arr.width, 0, 
-      NULL);
-    auto const data = PyArray_DATA((PyArrayObject*) nda);
-    memcpy(data, &str_arr.chars[0], len * str_arr.width);
-    PyDict_SetItemString(ndas, str_arr.name.c_str(), nda);
+    std::string name;
+    PyObject* arr;
+    std::tie(name, arr) = parse_str_col(col);
+    if (arr == nullptr) {
+      ok = false;
+      continue;
+    }
+
+    if (PyDict_SetItemString(ndas, name.c_str(), arr) != 0)
+      ok = false;
+
+    Py_DECREF(arr);
   }
 
-  return ndas;
+  if (ok)
+    return ndas;
+  else {
+    Py_DECREF(ndas);
+    return nullptr;
+  }
 }
 
 

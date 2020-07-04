@@ -3,9 +3,18 @@
 #include <string>
 #include <vector>
 
+#include <Python.h>
+
 #include "column.hh"
 
 //------------------------------------------------------------------------------
+
+extern std::pair<std::string, PyObject*>
+parse_str_col(
+  Column const& col);
+
+//------------------------------------------------------------------------------
+// FIXME: Deprecated
 
 struct StrArr
 {
@@ -14,7 +23,6 @@ struct StrArr
   std::vector<char> chars;
   std::string name;
 };
-
 
 extern StrArr
 parse_str_arr(

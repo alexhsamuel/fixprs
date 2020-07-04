@@ -97,6 +97,31 @@ load_file(
 }
 
 
+PyObject*
+parse(
+  Buffer const& buf)
+{
+  auto const cols = split_columns(buf);
+
+  PyObject* ndas = PyDict_New();
+  assert(ndas != NULL);
+
+  for (auto const& col : cols) {
+    // FIXME: Parse directly into the ndarray!
+    // FIXME: This can fail if decoding.
+    auto const str_arr = parse_str_arr(col);
+    npy_intp len = str_arr.len;
+    auto nda = PyArray_New(
+      &PyArray_Type, 1, &len, NPY_STRING, NULL, NULL, str_arr.width, 0, 
+      NULL);
+    auto const data = PyArray_DATA((PyArrayObject*) nda);
+    memcpy(data, &str_arr.chars[0], len * str_arr.width);
+    PyDict_SetItemString(ndas, str_arr.name.c_str(), nda);
+  }
+
+  return ndas;
+}
+
 
 //------------------------------------------------------------------------------
 
@@ -118,6 +143,31 @@ fn_load_file(
   auto res = load_file(PyBytes_AS_STRING(path));
   Py_DECREF(path);
   return res;
+}
+
+
+static PyObject*
+fn_parse(
+  PyObject* const self,
+  PyObject* const args,
+  PyObject* const kw_args)
+{
+  static char const* const keywords[] = {"obj", nullptr};
+  PyObject* obj;
+
+  if (!PyArg_ParseTupleAndKeywords(args, kw_args, "O", (char**) keywords, &obj))
+    return nullptr;
+
+  auto const memview = PyMemoryView_FromObject(obj);
+  if (memview == nullptr) {
+    Py_DECREF(obj);
+    return nullptr;
+  }
+
+  auto const pybuf = PyMemoryView_GET_BUFFER(memview);
+  Buffer buf{static_cast<char const*>(pybuf->buf), (size_t) pybuf->len};
+  
+  return parse(buf);
 }
 
 
@@ -144,6 +194,7 @@ fn_parse_number(
 
 static PyMethodDef methods[] = {
   {"load_file", (PyCFunction) fn_load_file, METH_VARARGS | METH_KEYWORDS, NULL},
+  {"parse", (PyCFunction) fn_parse, METH_VARARGS | METH_KEYWORDS, NULL},
   {"parse_number", (PyCFunction) fn_parse_number, METH_VARARGS, NULL},
   {NULL, NULL, 0, NULL}
 };

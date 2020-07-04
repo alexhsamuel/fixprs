@@ -9,22 +9,10 @@ using std::experimental::optional;
 // FIXME: static assert that this is right.
 using float64_t = double;
 
+#include "number_arr.hh"
 #include "str_arr.hh"
 
 //------------------------------------------------------------------------------
-
-template<class T>
-struct NumberArr
-{
-  using vals_type = std::vector<T>;
-
-  size_t len;
-  T min;
-  T max;
-  vals_type vals;
-  std::string name;
-};
-
 
 // FIXME: Use a respectable variant.
 
@@ -75,8 +63,6 @@ operator<<(
   return os;
 }
 
-
-//------------------------------------------------------------------------------
 
 extern Array
 parse_array_auto(

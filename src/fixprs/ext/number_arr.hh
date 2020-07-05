@@ -7,6 +7,8 @@
 
 //------------------------------------------------------------------------------
 
+// Platforms define int64_t variously as long and long long; accommodate both.
+
 static_assert(sizeof(unsigned long) == 8, "ulong not the same size as uint64_t");
 
 inline bool oadd(uint64_t a, uint64_t b, uint64_t& r) {

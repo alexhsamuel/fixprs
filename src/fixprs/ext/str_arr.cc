@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -44,6 +45,7 @@ parse_str_col(
   auto base = (char const*) PyArray_DATA((PyArrayObject*) arr);
 
   Py_BEGIN_ALLOW_THREADS
+  bzero((void*) base, width * len);
   for (; fields != col.end(); ++fields) {
     auto const field = *fields;
     memcpy((void*) (base + i++ * width), field.ptr, field.len);

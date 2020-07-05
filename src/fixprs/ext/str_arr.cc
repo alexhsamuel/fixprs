@@ -21,7 +21,6 @@ parse_str_col(
 
   auto const header = true;  // FIXME: Configuration.
 
-  size_t i = 0;
   auto fields = col.begin();
 
   std::string name = "???";  // FIXME
@@ -42,13 +41,14 @@ parse_str_col(
   // Allocate.
   auto arr = PyArray_New(
     &PyArray_Type, 1, &len, NPY_STRING, nullptr, nullptr, width, 0, nullptr);
-  auto base = (char const*) PyArray_DATA((PyArrayObject*) arr);
+  auto base = (char*) PyArray_DATA((PyArrayObject*) arr);
 
   Py_BEGIN_ALLOW_THREADS
-  bzero((void*) base, width * len);
-  for (; fields != col.end(); ++fields) {
+  for (size_t i = 0; fields != col.end(); ++fields, ++i) {
     auto const field = *fields;
-    memcpy((void*) (base + i++ * width), field.ptr, field.len);
+    auto const ptr = base + i * width;
+    memcpy((void*) ptr, field.ptr, field.len);
+    memset(ptr + field.len, 0, width - field.len);
   }
   Py_END_ALLOW_THREADS
 

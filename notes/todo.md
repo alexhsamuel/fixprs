@@ -1,8 +1,9 @@
-# Current
+# Current plan
 
 - [ ] test cases with larger tables
 - [ ] benchmark setup vs. NumPy, Pandas
 - [ ] put back threads
+- [ ] add float column
 
 
 # Upcoming

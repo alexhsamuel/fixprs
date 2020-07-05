@@ -2,6 +2,7 @@
 
 - [ ] test cases with larger tables
 - [ ] benchmark setup vs. NumPy, Pandas
+- [ ] put back threads
 
 
 # Upcoming

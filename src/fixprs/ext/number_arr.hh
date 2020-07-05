@@ -7,10 +7,23 @@
 
 //------------------------------------------------------------------------------
 
-inline bool oadd(uint64_t a, uint64_t b, uint64_t& r) { return __builtin_uaddl_overflow(a, b, &r); }
-inline bool oadd( int64_t a,  int64_t b,  int64_t& r) { return __builtin_saddl_overflow(a, b, &r); }
-inline bool omul(uint64_t a, uint64_t b, uint64_t& r) { return __builtin_umull_overflow(a, b, &r); }
-inline bool omul( int64_t a,  int64_t b,  int64_t& r) { return __builtin_smull_overflow(a, b, &r); }
+static_assert(sizeof(unsigned long) == 8, "ulong not the same size as uint64_t");
+
+inline bool oadd(uint64_t a, uint64_t b, uint64_t& r) {
+  return __builtin_uaddl_overflow((unsigned long) a, (unsigned long) b, reinterpret_cast<unsigned long*>(&r));
+}
+
+inline bool oadd( int64_t a,  int64_t b,  int64_t& r) {
+  return __builtin_saddl_overflow((long) a, (long) b, reinterpret_cast<long*>(&r));
+}
+
+inline bool omul(uint64_t a, uint64_t b, uint64_t& r) {
+  return __builtin_umull_overflow((unsigned long) a, (long) b, reinterpret_cast<unsigned long*>(&r));
+}
+
+inline bool omul( int64_t a,  int64_t b,  int64_t& r) {
+  return __builtin_smull_overflow((long) a, (long) b, reinterpret_cast<long*>(&r));
+}
 
 //------------------------------------------------------------------------------
 

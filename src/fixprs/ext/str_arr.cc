@@ -14,7 +14,7 @@
 //------------------------------------------------------------------------------
 
 std::pair<std::string, PyObject*>
-parse_str_col(
+parse_bytes_col(
   Column const& col)
 {
   npy_intp len = col.size();
@@ -47,7 +47,9 @@ parse_str_col(
   for (size_t i = 0; fields != col.end(); ++fields, ++i) {
     auto const field = *fields;
     auto const ptr = base + i * width;
+    // Copy the bytes in.
     memcpy((void*) ptr, field.ptr, field.len);
+    // Zero out the rest of the field.
     memset(ptr + field.len, 0, width - field.len);
   }
   Py_END_ALLOW_THREADS

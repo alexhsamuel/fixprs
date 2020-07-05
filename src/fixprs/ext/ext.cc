@@ -124,7 +124,7 @@ parse(
   for (auto const& col : cols) {
     std::string name;
     PyObject* arr;
-    std::tie(name, arr) = parse_str_col(col);
+    std::tie(name, arr) = parse_bytes_col(col);
     if (arr == nullptr) {
       ok = false;
       continue;

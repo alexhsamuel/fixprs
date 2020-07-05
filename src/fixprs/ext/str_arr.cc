@@ -3,8 +3,9 @@
 #include <vector>
 
 #include <Python.h>
+#define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#define PY_ARRAY_UNIQUE_SYMBOL TABCSV_ARRAY_API
+#define PY_ARRAY_UNIQUE_SYMBOL FIXPRS_ARRAY_API
 #include <numpy/arrayobject.h>
 
 #include "str_arr.hh"

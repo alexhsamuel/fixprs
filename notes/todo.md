@@ -1,3 +1,11 @@
+# Current
+
+- [ ] test cases with larger tables
+- [ ] benchmark setup vs. NumPy, Pandas
+
+
+# Upcoming
+
 - [ ] `parse()`
   - [ ] auto dtype
   - [ ] pass in dtypes

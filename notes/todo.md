@@ -1,7 +1,7 @@
 # Current plan
 
+- [x] benchmark setup vs. NumPy, Pandas
 - [ ] test cases with larger tables
-- [ ] benchmark setup vs. NumPy, Pandas
 - [ ] put back threads
 - [ ] add float column
 

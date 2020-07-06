@@ -26,7 +26,7 @@ def run(path):
     yield "csv", "load_csv_arr dtype=object", benchmark(lambda: load_csv_arr(path, object))
     yield "csv", "load_csv_arr dtype=S20", benchmark(lambda: load_csv_arr(path, "S20"))
     yield "np", "loadtxt str-recarray", benchmark(
-        lambda: np.loadtxt(path, skiprows=1, delimiter=",", dtype=np.dtype([ (str(n), str) for n in range(12) ])))
+        lambda: np.loadtxt(path, skiprows=1, delimiter=",", dtype=np.dtype([ (str(n), str) for n in range(11) ])))
     # FIXME: This returns O arrays of str.
     yield "pd", "load_csv dtype=str", benchmark(lambda: pd.read_csv(path, dtype=str))
     # FIXME: This returns S arrays.
@@ -43,7 +43,7 @@ def main():
     if not path.exists():
         logging.info(f"generating: {path}")
         df = gen.GEN0(args.length)
-        df.to_csv(path)
+        df.to_csv(path, index=False)
 
     for lib, name, elapsed in run(path):
         print(f"{lib:8s} {name:40s} {elapsed / length / 1e-6:8.3f} µs")

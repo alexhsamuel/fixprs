@@ -92,8 +92,7 @@ def main():
     args = parser.parse_args()
 
     df = GEN0(args.length)
-    df.index.name = "index"
-    df.to_csv(sys.stdout)
+    df.to_csv(sys.stdout, index=False)
 
 
 if __name__ == "__main__":

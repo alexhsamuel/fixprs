@@ -28,9 +28,47 @@ extern SplitResult split(Buffer buf, Config const& cfg);
 
 //------------------------------------------------------------------------------
 
-struct Array
+class Array
 {
-  PyObject* array;
+public:
+
+  Array(
+    PyArrayDescr* dtype,
+    size_t len)
+  : arr_(PyArray_Empty(1, &len, dtype, 0))
+  {
+    assert(arr_ != nullptr);  // FIXME
+  }
+
+  ~Array() {
+    if (arr_ != nullptr) {
+      Py_DECREF(arr_);
+      arr_ = nullptr;
+    }
+  }
+
+  Array(Array const&) = delete;
+  void operator=(Array const&) = delete;
+
+  void expand(size_t const len) {
+    assert(arr_ != nullptr);
+    if (len > PyArray_Length(arr_))
+      // FIXME: Resize.
+      ;
+  }
+
+  PyObject* release(size_t const len) {
+    assert(arr_ != nullptr);
+    // FIXME: Resize.
+    auto arr = arr_;
+    arr_ = nullptr;
+    return arr;
+  }
+
+private:
+
+  PyObject* arr_;
+
 };
 
 
@@ -108,7 +146,9 @@ void process(Source& src, Config const& cfg) {
 
     // Extend arrays.
     // - make sure there are enough of them
-    // - make sure each is long enough
+
+    for (auto arr& : arrays)
+      arr.expand(...);
 
     for (size_t c = 0; c < split_result.cols.size(); ++c)
       // FIXME: Select columns to parse.

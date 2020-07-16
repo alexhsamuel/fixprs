@@ -33,11 +33,16 @@ class Array
 public:
 
   Array(
-    PyArrayDescr* dtype,
-    size_t len)
-  : arr_(PyArray_Empty(1, &len, dtype, 0))
+    size_t const width,
+    size_t const len)
+  : width_(width)
+  , idx_(0)
   {
+    arr_ = PyArray_New(
+      &PyArray_Type, 1, &len, NPY_STRING, nullptr, nullptr, width, 0, nullptr);
     assert(arr_ != nullptr);  // FIXME
+    ptr_ = (char*) PyArray_DATA((PyArrayObject*) arr_);
+    stride_ = width;
   }
 
   ~Array() {
@@ -62,12 +67,35 @@ public:
     // FIXME: Resize.
     auto arr = arr_;
     arr_ = nullptr;
+    ptr_ = nullptr;
     return arr;
+  }
+
+  Result parse(Column const& col) {
+    for (
+      auto field = col.begin(), size_t i = 0;
+      field != col.end();
+      ++field, ++i) {
+      auto const ptr = ptr_ + idx_ * stride_;
+      // Copy the bytes in.
+      memcpy(ptr, field->ptr, field->len);
+      // Zero out the rest of the field.
+      memset(ptr + field->len, 0, width_ - field->len);
+      // Advance.
+      ++idx_;
+    }
+
+    return Result{};
   }
 
 private:
 
+  size_t width_;
+  size_t idx_;
+
   PyObject* arr_;
+  char* ptr_;
+  size_t stride_;
 
 };
 
@@ -82,11 +110,7 @@ struct Result
 };
 
 
-extern void
-parse_bytes(
-  Column::Slice&& slice,
-  Array&& const arr,
-  Result& result);
+extern Result parse_bytes(Column const& col, Array& arr);
 
 //------------------------------------------------------------------------------
 
@@ -137,25 +161,42 @@ private:
 }
 
 
+Result parse_bytes(Column const& col, Array& arr) {
+  Result result;
+
+  auto fields = col.begin();
+
+  for (size_t i = 0; fields != col.end(); ++fields, ++i) {
+    auto const field = *fields;
+    auto const ptr = 
+  }
+}
+
+
 void process(Source& src, Config const& cfg) {
-  std::vector<std::unique_ptr<Arr>> arrays;
+  std::vector<Arr> arrays;
 
   for (auto buf = src.get_next(); buf.len > 0; buf = src.get_next()) {
     auto split_result = split_columns(buf, cfg);
-    src.advance(split_result.num_bytes);
 
     // Extend arrays.
     // - make sure there are enough of them
 
-    for (auto arr& : arrays)
-      arr.expand(...);
+    // for (auto arr& : arrays)
+    //   arr.expand(...);
 
-    for (size_t c = 0; c < split_result.cols.size(); ++c)
-      // FIXME: Select columns to parse.
-      results.push_back(pool.enqueue(parse, &cols[c], arrs[c]));
+    for (size_t i = 0; i < split_results.cols.size(); ++i) {
+      auto result = arrays[i].parse(cols[i]);
+      // FIXME: Handle result.
+    }
 
-    for (auto&& result : results)
+    // for (size_t c = 0; c < split_result.cols.size(); ++c)
+    //   // FIXME: Select columns to parse.
+    //   results.push_back(pool.enqueue(parse, &cols[c], arrs[c]));
 
+    // for (auto&& result : results)
+
+    src.advance(split_result.num_bytes);
   }
 }
 

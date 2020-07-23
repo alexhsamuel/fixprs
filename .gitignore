@@ -1,2 +1,4 @@
 build/
 src/fixprs/ext.*
+src/fixprs/ext2.*
+work/

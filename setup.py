@@ -49,17 +49,17 @@ setuptools.setup(
 
     ext_modules     =[
         setuptools.Extension(
-            "fixprs.ext",
+            "fixprs.ext2",
             extra_compile_args  =["-std=c++14"],
             include_dirs        =[
                 "./vendor/fast_double_parser/include",
                 "./vendor/ThreadPool",
                 *get_numpy_include_dirs(),
             ],
-            sources             =glob.glob("src/fixprs/ext/*.cc"),
+            sources             =glob.glob("src/fixprs/ext2/*.cc"),
             library_dirs        =[],
             libraries           =[],
-            depends             =glob.glob("src/fixprs/ext/*.hh"),
+            depends             =glob.glob("src/fixprs/ext2/*.hh"),
         ),
     ],
 

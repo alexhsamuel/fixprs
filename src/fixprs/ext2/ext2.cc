@@ -1,0 +1,108 @@
+#include <assert.h>
+#include <fcntl.h>
+#include <Python.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#define PY_ARRAY_UNIQUE_SYMBOL FIXPRS_ARRAY_API
+#include <numpy/arrayobject.h>
+
+#include "column.hh"
+
+//------------------------------------------------------------------------------
+
+extern "C" {
+
+static PyObject*
+fn_split_columns(
+  PyObject* const self,
+  PyObject* const args,
+  PyObject* const kw_args)
+{
+  static char const* const keywords[] = {"obj", NULL};
+  PyObject* obj;
+
+  if (!PyArg_ParseTupleAndKeywords(args, kw_args, "O", (char**) keywords, &obj))
+    return NULL;
+
+  auto const memview = PyMemoryView_FromObject(obj);
+  if (memview == nullptr) {
+    Py_DECREF(obj);
+    return nullptr;
+  }
+
+  auto const pybuf = PyMemoryView_GET_BUFFER(memview);
+  Buffer buf{static_cast<char const*>(pybuf->buf), (size_t) pybuf->len};
+  
+  Config cfg;
+  auto result = split_columns(buf, cfg);
+  std::cerr << "split "
+            << result.num_bytes << " bytes, "
+            << result.num_rows << " rows, "
+            << result.cols.size() << " cols\n";
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+#if 0
+
+static PyObject*
+fn_parse(
+  PyObject* const self,
+  PyObject* const args,
+  PyObject* const kw_args)
+{
+  static char const* const keywords[] = {"obj", nullptr};
+  PyObject* obj;
+
+  if (!PyArg_ParseTupleAndKeywords(args, kw_args, "O", (char**) keywords, &obj))
+    return nullptr;
+
+  auto const memview = PyMemoryView_FromObject(obj);
+  if (memview == nullptr) {
+    Py_DECREF(obj);
+    return nullptr;
+  }
+
+  auto const pybuf = PyMemoryView_GET_BUFFER(memview);
+  Buffer buf{static_cast<char const*>(pybuf->buf), (size_t) pybuf->len};
+  
+  return parse(buf);
+}
+
+#endif
+
+
+static PyMethodDef methods[] = {
+  {"split_columns", (PyCFunction) fn_split_columns, METH_VARARGS | METH_KEYWORDS, NULL},
+//  {"parse", (PyCFunction) fn_parse, METH_VARARGS | METH_KEYWORDS, NULL},
+  {NULL, NULL, 0, NULL}
+};
+
+
+static struct PyModuleDef
+module_def = {
+  PyModuleDef_HEAD_INIT,
+  "fixprs.ext2",  
+  NULL,
+  -1,      
+  methods,
+};
+
+
+PyMODINIT_FUNC
+PyInit_ext2(void)
+{
+  import_array();
+
+  PyObject* module = PyModule_Create(&module_def);
+  assert(module != NULL);
+  return module;
+}
+
+
+}  // extern "C"
+

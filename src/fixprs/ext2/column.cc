@@ -6,7 +6,7 @@ split_columns(
   Buffer const buf, 
   Config const& cfg)
 {
-  // FIXME
+  // FIXME: Take from cfg. 
   char const sep = ',';
   char const eol = '\n';
   char const quote = '"';

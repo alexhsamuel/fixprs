@@ -71,6 +71,8 @@ def dataframe(**kw_args):
 
 #-------------------------------------------------------------------------------
 
+GEN_4NORMALS = dataframe(**{ f"normal{i}": normal() for i in range(4) })
+
 GEN0 = dataframe(
     id      =cumsum(uniform_int(1, 10)),
     name    =word(8, upper=True),

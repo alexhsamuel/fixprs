@@ -21,6 +21,11 @@ split_columns(
   std::vector<Column>::size_type col_idx = 0;
   cols.emplace_back(buf);
 
+  // Number of parsed lines.
+  size_t size = 0;
+  // Beginning of first unparsed line.
+  size_t end = 0;
+
   size_t start = 0;
   bool escaped = false;
 
@@ -31,11 +36,14 @@ split_columns(
       // End the field.
       cols.at(col_idx++).append(start, i, escaped);
       escaped = false;
-      start = i + 1;
+      end = start = i + 1;
 
       // Remaining colums are missing in this row.
       for (; col_idx < cols.size(); ++col_idx)
         cols.at(col_idx).append_missing();
+
+      ++size;
+      assert(cols.at(0).size() == size);
 
       // End the line.
       col_idx = 0;
@@ -66,48 +74,23 @@ split_columns(
     // FIXME: Trailing field?
   }
 
-  // Finish the current field.
-  if (start < buf.len)
-    cols.at(col_idx++).append(start, buf.len, escaped);
+  // FIXME: Handle the end of file somehow.
 
-  // Remaining colums are missing in this row.
-  if (col_idx > 0)
-    for (; col_idx < cols.size(); ++col_idx)
-      cols.at(col_idx).append_missing();
+  // // Finish the current field.
+  // if (start < buf.len)
+  //   cols.at(col_idx++).append(start, buf.len, escaped);
 
-  result.num_bytes = buf.len;
-  result.num_rows = cols[0].size();
+  // // Remaining colums are missing in this row.
+  // if (col_idx > 0)
+  //   for (; col_idx < cols.size(); ++col_idx)
+  //     cols.at(col_idx).append_missing();
+
+  for (auto& col : cols)
+    col.resize(size);
+
+  result.num_bytes = end;
+  result.num_rows = size;
   return result;
 }
 
 
-#if 0
-
-void process(Source& src, Config const& cfg) {
-  std::vector<Arr> arrays;
-
-  for (auto buf = src.get_next(); buf.len > 0; buf = src.get_next()) {
-    auto split_result = split_columns(buf, cfg);
-
-    // Extend arrays.
-    // - make sure there are enough of them
-
-    // for (auto arr& : arrays)
-    //   arr.expand(...);
-
-    for (size_t i = 0; i < split_results.cols.size(); ++i) {
-      auto result = arrays[i].parse(cols[i]);
-      // FIXME: Handle result.
-    }
-
-    // for (size_t c = 0; c < split_result.cols.size(); ++c)
-    //   // FIXME: Select columns to parse.
-    //   results.push_back(pool.enqueue(parse, &cols[c], arrs[c]));
-
-    // for (auto&& result : results)
-
-    src.advance(split_result.num_bytes);
-  }
-}
-
-#endif

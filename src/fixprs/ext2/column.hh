@@ -113,6 +113,8 @@ public:
 
   };
 
+  void resize(size_t const size) { fields_.resize(size); }
+
   Iterator begin() const { return Iterator(*this, 0); }
   Iterator end() const { return Iterator(*this, size()); }
 

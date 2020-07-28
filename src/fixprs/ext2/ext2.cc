@@ -9,6 +9,8 @@
 #include <numpy/arrayobject.h>
 
 #include "column.hh"
+#include "source.hh"
+#include "parse.hh"
 
 //------------------------------------------------------------------------------
 
@@ -47,10 +49,8 @@ fn_split_columns(
 }
 
 
-#if 0
-
 static PyObject*
-fn_parse(
+fn_parse_buffer(
   PyObject* const self,
   PyObject* const args,
   PyObject* const kw_args)
@@ -67,18 +67,21 @@ fn_parse(
     return nullptr;
   }
 
+  Config cfg;
+
   auto const pybuf = PyMemoryView_GET_BUFFER(memview);
   Buffer buf{static_cast<char const*>(pybuf->buf), (size_t) pybuf->len};
+  BufferSource source{buf, 1024};
+  parse(source, cfg);
   
-  return parse(buf);
+  Py_INCREF(Py_None);
+  return Py_None;
 }
-
-#endif
 
 
 static PyMethodDef methods[] = {
   {"split_columns", (PyCFunction) fn_split_columns, METH_VARARGS | METH_KEYWORDS, NULL},
-//  {"parse", (PyCFunction) fn_parse, METH_VARARGS | METH_KEYWORDS, NULL},
+  {"parse_buffer", (PyCFunction) fn_parse_buffer, METH_VARARGS | METH_KEYWORDS, NULL},
   {NULL, NULL, 0, NULL}
 };
 

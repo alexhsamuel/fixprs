@@ -4,5 +4,6 @@
 
 struct Config
 {
+  size_t chunk_size = 8192;
 };
 

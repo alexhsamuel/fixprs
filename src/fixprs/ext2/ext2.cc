@@ -71,7 +71,7 @@ fn_parse_buffer(
 
   auto const pybuf = PyMemoryView_GET_BUFFER(memview);
   Buffer buf{static_cast<char const*>(pybuf->buf), (size_t) pybuf->len};
-  BufferSource source{buf, 1024};
+  BufferSource source{buf, cfg.chunk_size};
   parse(source, cfg);
   
   Py_INCREF(Py_None);

@@ -1,3 +1,4 @@
+#include "array.hh"
 #include "column.hh"
 #include "config.hh"
 #include "source.hh"
@@ -6,7 +7,7 @@
 
 void parse(Source& src, Config const& cfg)
 {
-  // std::vector<Arr> arrays;
+  std::vector<Array> arrays;
 
   for (auto buf = src.get_next(); buf.len > 0; buf = src.get_next()) {
     auto split_result = split_columns(buf, cfg);
@@ -35,5 +36,8 @@ void parse(Source& src, Config const& cfg)
     src.advance(split_result.num_bytes);
   }
 }
+
+
+
 
 

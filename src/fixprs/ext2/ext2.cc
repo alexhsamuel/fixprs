@@ -4,7 +4,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#define NPY_NO_DEPRECATED_API NPY_API_VERSION
 #define PY_ARRAY_UNIQUE_SYMBOL FIXPRS_ARRAY_API
 #include <numpy/arrayobject.h>
 
@@ -62,10 +62,8 @@ fn_parse_buffer(
     return nullptr;
 
   auto const memview = PyMemoryView_FromObject(obj);
-  if (memview == nullptr) {
-    Py_DECREF(obj);
+  if (memview == nullptr)
     return nullptr;
-  }
 
   Config cfg;
 
@@ -74,6 +72,8 @@ fn_parse_buffer(
   BufferSource source{buf, cfg.chunk_size};
   parse(source, cfg);
   
+  Py_DECREF(memview);
+
   Py_INCREF(Py_None);
   return Py_None;
 }

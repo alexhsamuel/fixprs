@@ -4,7 +4,7 @@
 #include <Python.h>
 
 #define NO_IMPORT_ARRAY
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#define NPY_NO_DEPRECATED_API NPY_API_VERSION
 #define PY_ARRAY_UNIQUE_SYMBOL FIXPRS_ARRAY_API
 #include <numpy/arrayobject.h>
 
@@ -40,18 +40,20 @@ public:
   }
 
   ~Array() {
+    ptr_ = nullptr;
     Py_XDECREF(arr_);
     arr_ = nullptr;
   }
 
   Array(Array const&) = delete;
+  Array(Array&&) = default;
   void operator=(Array const&) = delete;
+  Array& operator=(Array&&) = default;
 
   void expand(size_t const len) {
     assert(arr_ != nullptr);
     if (len > (size_t) PyArray_SIZE((PyArrayObject*) arr_))
-      // FIXME: Resize.
-      ;
+      abort();
   }
 
   PyObject* release(size_t const len) {

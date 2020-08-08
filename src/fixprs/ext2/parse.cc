@@ -17,7 +17,10 @@ void parse(Source& src, Config const& cfg)
               << split_result.cols.size() << " cols\n";
 
     // Extend arrays.
-    // - make sure there are enough of them
+    while (arrays.size() < split_result.cols.size()) {
+      std::cerr << "adding col: " << arrays.size() << "\n";
+      arrays.emplace_back(32, 16384);
+    }
 
     // for (auto arr& : arrays)
     //   arr.expand(...);
@@ -35,6 +38,12 @@ void parse(Source& src, Config const& cfg)
 
     src.advance(split_result.num_bytes);
   }
+
+  std::cerr << "all done\n";
+  std::cerr << arrays.size() << "\n";
+  arrays.clear();
+  std::cerr << arrays.size() << "\n";
+  std::cerr << "really done\n";
 }
 
 

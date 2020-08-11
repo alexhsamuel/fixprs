@@ -3,7 +3,7 @@ __version__ = "0.1.0"
 import mmap
 import os
 
-from   .ext import load_file, parse
+# from   .ext import load_file, parse
 
 #-------------------------------------------------------------------------------
 

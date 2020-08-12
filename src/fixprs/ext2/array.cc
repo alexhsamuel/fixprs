@@ -1,4 +1,6 @@
+#include <cassert>
 #include <Python.h>
+
 #define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_API_VERSION
 #define PY_ARRAY_UNIQUE_SYMBOL FIXPRS_ARRAY_API

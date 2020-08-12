@@ -23,9 +23,6 @@ public:
   Array(size_t const width, size_t const len);
   ~Array();
 
-  Array(Array const&) = delete;
-  void operator=(Array const&) = delete;
-
   Array(Array&& arr)
   : width_(arr.width_)
   , len_(arr.len_)
@@ -38,6 +35,8 @@ public:
     arr.arr_ = nullptr;
   }
 
+  Array(Array const&) = delete;
+  void operator=(Array const&) = delete;
   Array& operator=(Array&& arr) = delete;
 
   void expand(size_t const len) {

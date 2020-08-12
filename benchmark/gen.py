@@ -93,7 +93,7 @@ def main():
     parser.add_argument("length", metavar="LEN", type=int)
     args = parser.parse_args()
 
-    df = GEN0(args.length)
+    df = GEN_4NORMALS(args.length)
     df.to_csv(sys.stdout, index=False)
 
 

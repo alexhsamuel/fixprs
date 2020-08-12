@@ -7,6 +7,7 @@
 #define NPY_NO_DEPRECATED_API NPY_API_VERSION
 #define PY_ARRAY_UNIQUE_SYMBOL FIXPRS_ARRAY_API
 #include <numpy/arrayobject.h>
+#include <numpy/npy_3kcompat.h>
 
 #include "column.hh"
 #include "source.hh"
@@ -99,7 +100,7 @@ module_def = {
 PyMODINIT_FUNC
 PyInit_ext2(void)
 {
-  import_array();
+  _import_array();
 
   PyObject* module = PyModule_Create(&module_def);
   assert(module != NULL);

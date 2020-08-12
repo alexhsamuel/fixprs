@@ -3,11 +3,6 @@
 #include <cassert>
 #include <Python.h>
 
-#define NO_IMPORT_ARRAY
-#define NPY_NO_DEPRECATED_API NPY_API_VERSION
-#define PY_ARRAY_UNIQUE_SYMBOL FIXPRS_ARRAY_API
-#include <numpy/arrayobject.h>
-
 #include "column.hh"
 
 //------------------------------------------------------------------------------
@@ -25,25 +20,8 @@ class Array
 {
 public:
 
-  Array(
-    size_t const width,
-    size_t const len)
-  : width_(width)
-  , idx_(0)
-  {
-    npy_intp l = len;
-    arr_ = PyArray_New(
-      &PyArray_Type, 1, &l, NPY_STRING, nullptr, nullptr, width, 0, nullptr);
-    assert(arr_ != nullptr);  // FIXME
-    ptr_ = (char*) PyArray_DATA((PyArrayObject*) arr_);
-    stride_ = width;
-  }
-
-  ~Array() {
-    ptr_ = nullptr;
-    Py_XDECREF(arr_);
-    arr_ = nullptr;
-  }
+  Array(size_t const width, size_t const len);
+  ~Array();
 
   Array(Array const&) = delete;
   Array(Array&&) = default;
@@ -52,18 +30,12 @@ public:
 
   void expand(size_t const len) {
     assert(arr_ != nullptr);
-    if (len > (size_t) PyArray_SIZE((PyArrayObject*) arr_))
+    if (len > len_)
+      // FIXME: Expand.
       abort();
   }
 
-  PyObject* release(size_t const len) {
-    assert(arr_ != nullptr);
-    // FIXME: Resize.
-    auto const arr = arr_;
-    arr_ = nullptr;
-    ptr_ = nullptr;
-    return arr;
-  }
+  PyObject* release(size_t const len);
 
   Result parse(Column const& col) {
     for (auto field : col) {
@@ -82,6 +54,7 @@ public:
 private:
 
   size_t width_;
+  size_t len_;
   size_t idx_;
 
   PyObject* arr_;

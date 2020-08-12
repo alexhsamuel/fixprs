@@ -46,7 +46,7 @@ public:
       abort();
   }
 
-  PyObject* release(size_t const len);
+  PyObject* release();
 
   Result parse(Column const& col) {
     for (auto field : col) {

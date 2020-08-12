@@ -5,7 +5,7 @@
 
 //------------------------------------------------------------------------------
 
-void parse(Source& src, Config const& cfg)
+std::vector<Array> parse(Source& src, Config const& cfg)
 {
   std::vector<Array> arrays;
 
@@ -20,6 +20,9 @@ void parse(Source& src, Config const& cfg)
     while (arrays.size() < split_result.cols.size()) {
       arrays.emplace_back(32, 16384);
     }
+
+    for (size_t i = 0; i < split_result.cols.size(); ++i)
+      arrays[i].parse(split_result.cols[i]);
 
     // for (size_t i = 0; i < split_results.cols.size(); ++i) {
     //   arr.expand(...);
@@ -37,7 +40,7 @@ void parse(Source& src, Config const& cfg)
     src.advance(split_result.num_bytes);
   }
 
-  arrays.clear();
+  return arrays;
 }
 
 

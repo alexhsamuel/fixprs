@@ -1,6 +1,10 @@
+#include <vector>
+
+#include "array.hh"
 #include "config.hh"
 #include "source.hh"
 
 //------------------------------------------------------------------------------
 
-extern void parse(Source& src, Config const& cfg);
+extern std::vector<Array> parse(Source& src, Config const& cfg);
+

@@ -35,8 +35,7 @@ Array::~Array() {
 
 
 PyObject*
-Array::release(
-  size_t const len)
+Array::release()
 {
   assert(arr_ != nullptr);
   // FIXME: Resize.

@@ -24,9 +24,21 @@ public:
   ~Array();
 
   Array(Array const&) = delete;
-  Array(Array&&) = default;
   void operator=(Array const&) = delete;
-  Array& operator=(Array&&) = default;
+
+  Array(Array&& arr)
+  : width_(arr.width_)
+  , len_(arr.len_)
+  , idx_(arr.idx_)
+  , arr_(arr.arr_)
+  , ptr_(arr.ptr_)
+  , stride_(arr.stride_)
+  {
+    arr.ptr_ = nullptr;
+    arr.arr_ = nullptr;
+  }
+
+  Array& operator=(Array&& arr) = delete;
 
   void expand(size_t const len) {
     assert(arr_ != nullptr);

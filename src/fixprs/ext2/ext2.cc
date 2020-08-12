@@ -75,10 +75,10 @@ fn_parse_buffer(
   
   Py_DECREF(memview);
 
+  // Extract and package up arrays.
   auto res = PyList_New(arrays.size());
   if (res == nullptr)
     return nullptr;
-
   size_t i = 0;
   for (auto& arr : arrays)
     PyList_SET_ITEM(res, i++, arr.release());

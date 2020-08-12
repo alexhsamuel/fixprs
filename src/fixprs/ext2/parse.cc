@@ -1,3 +1,5 @@
+#include "ThreadPool.h"
+
 #include "array.hh"
 #include "column.hh"
 #include "config.hh"
@@ -9,6 +11,9 @@ std::vector<Array> parse(Source& src, Config const& cfg)
 {
   std::vector<Array> arrays;
 
+  // FIXME: cfg threading, including no threading.
+  ThreadPool pool{5};
+
   for (auto buf = src.get_next(); buf.len > 0; buf = src.get_next()) {
     auto split_result = split_columns(buf, cfg);
     std::cerr << "split "
@@ -17,12 +22,20 @@ std::vector<Array> parse(Source& src, Config const& cfg)
               << split_result.cols.size() << " cols\n";
 
     // Extend arrays.
-    while (arrays.size() < split_result.cols.size()) {
-      arrays.emplace_back(32, 16384);
+    while (arrays.size() < split_result.cols.size())
+      // FIXME
+      arrays.emplace_back(32, 1048577);
+
+    std::vector<std::future<Result>> parse_results;
+    for (size_t i = 0; i < split_result.cols.size(); ++i) {
+      auto& arr = arrays[i];
+      auto& col = split_result.cols[i];
+      parse_results.push_back(pool.enqueue([&] { return arr.parse(col); }));
     }
 
-    for (size_t i = 0; i < split_result.cols.size(); ++i)
-      arrays[i].parse(split_result.cols[i]);
+    for (auto&& result : parse_results)
+      // FIXME: Do something with them.
+      result.get();
 
     // for (size_t i = 0; i < split_results.cols.size(); ++i) {
     //   arr.expand(...);

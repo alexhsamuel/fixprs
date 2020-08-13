@@ -40,27 +40,15 @@ Array::resize(
 {
   assert(arr_ != nullptr);
 
-  npy_intp l = len;
-  auto arr = PyArray_New(
-    &PyArray_Type, 1, &l, NPY_STRING, nullptr, nullptr, width_, 0, nullptr);
-  assert(arr != nullptr);  // FIXME
-  // Truncate the position if necessary.
-  auto idx = std::min(idx_, len);
-  auto ptr = (char*) PyArray_DATA((PyArrayObject*) arr);
+  npy_intp shape[1] = {(npy_intp) len};
+  PyArray_Dims dims = { shape, 1 };
+  // FIXME: Not sure what the return value of PyArray_Resize is.  This function
+  // resizes the array in place.  
+  PyArray_Resize((PyArrayObject*) arr_, &dims, 0, NPY_CORDER);
 
-  // Copy all data so far.
-  memcpy(ptr, ptr_, idx * width_);
-  // Zero out any additional.
-  if (len - idx > 0)
-    memset(ptr + idx * width_, 0, (len - idx) * width_);
-
-  // Release the previous array.
-  Py_XDECREF(arr_);
-
-  arr_ = arr;
   len_ = len;
-  ptr_ = ptr;
-  idx_ = idx;
+  // Possibly new pointer to data.
+  ptr_ = (char*) PyArray_DATA((PyArrayObject*) arr_);
 }
 
 
@@ -68,7 +56,10 @@ PyObject*
 Array::release()
 {
   assert(arr_ != nullptr);
-  // FIXME: Resize.
+  // FIXME: Slice rather than resize in some cases?
+  if (idx_ < len_)
+    ;
+
   auto const arr = arr_;
   arr_ = nullptr;
   ptr_ = nullptr;

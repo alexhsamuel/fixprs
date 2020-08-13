@@ -55,12 +55,17 @@ Array::resize(
 PyObject*
 Array::release()
 {
-  assert(arr_ != nullptr);
-  // FIXME: Slice rather than resize in some cases?
-  if (idx_ < len_)
-    ;
-
   auto const arr = arr_;
+
+  assert(arr != nullptr);
+  if (idx_ < len_) {
+    // Trim the array to length.
+    // FIXME: Slice rather than resize in some cases?
+    npy_intp shape[1] = {(npy_intp) idx_};
+    PyArray_Dims dims = { shape, 1 };
+    PyArray_Resize((PyArrayObject*) arr, &dims, 0, NPY_CORDER);
+  }
+
   arr_ = nullptr;
   ptr_ = nullptr;
   return arr;

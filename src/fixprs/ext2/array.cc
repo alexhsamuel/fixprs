@@ -34,6 +34,36 @@ Array::~Array() {
 }
 
 
+void
+Array::resize(
+  size_t const len)
+{
+  assert(arr_ != nullptr);
+
+  npy_intp l = len;
+  auto arr = PyArray_New(
+    &PyArray_Type, 1, &l, NPY_STRING, nullptr, nullptr, width_, 0, nullptr);
+  assert(arr != nullptr);  // FIXME
+  // Truncate the position if necessary.
+  auto idx = std::min(idx_, len);
+  auto ptr = (char*) PyArray_DATA((PyArrayObject*) arr);
+
+  // Copy all data so far.
+  memcpy(ptr, ptr_, idx * width_);
+  // Zero out any additional.
+  if (len - idx > 0)
+    memset(ptr + idx * width_, 0, (len - idx) * width_);
+
+  // Release the previous array.
+  Py_XDECREF(arr_);
+
+  arr_ = arr;
+  len_ = len;
+  ptr_ = ptr;
+  idx_ = idx;
+}
+
+
 PyObject*
 Array::release()
 {

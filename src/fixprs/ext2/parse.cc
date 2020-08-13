@@ -24,11 +24,12 @@ std::vector<Array> parse(Source& src, Config const& cfg)
     // Extend arrays.
     while (arrays.size() < split_result.cols.size())
       // FIXME
-      arrays.emplace_back(32, 1048577);
+      arrays.emplace_back(32, 0);
 
     std::vector<std::future<Result>> parse_results;
     for (size_t i = 0; i < split_result.cols.size(); ++i) {
       auto& arr = arrays[i];
+      arr.expand(arr.size() + split_result.num_rows);
       auto& col = split_result.cols[i];
       parse_results.push_back(pool.enqueue([&] { return arr.parse(col); }));
     }

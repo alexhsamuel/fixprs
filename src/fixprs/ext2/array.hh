@@ -39,11 +39,16 @@ public:
   void operator=(Array const&) = delete;
   Array& operator=(Array&& arr) = delete;
 
+  size_t size() const { return idx_; }
+
   void expand(size_t const len) {
-    assert(arr_ != nullptr);
-    if (len > len_)
-      // FIXME: Expand.
-      abort();
+    if (len_ < len) {
+      auto l = std::max(len_, 1ul);
+      while (l < len)
+        l *= 2;
+      // FIXME: Tune.
+      resize(l);
+    }
   }
 
   PyObject* release();
@@ -63,6 +68,8 @@ public:
   }
 
 private:
+
+  void resize(size_t len);
 
   size_t width_;
   size_t len_;

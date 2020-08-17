@@ -24,7 +24,7 @@ std::vector<Array> parse(Source& src, Config const& cfg)
     // Extend arrays.
     while (arrays.size() < split_result.cols.size())
       // FIXME
-      arrays.emplace_back(32, 0);
+      arrays.emplace_back(32, cfg.initial_column_len);
 
     std::vector<std::future<Result>> parse_results;
     for (size_t i = 0; i < split_result.cols.size(); ++i) {

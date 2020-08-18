@@ -5,6 +5,9 @@
 
 #include "column.hh"
 
+#define likely(x)      __builtin_expect(!!(x), 1)
+#define unlikely(x)    __builtin_expect(!!(x), 0)
+
 //------------------------------------------------------------------------------
 
 struct Result
@@ -12,8 +15,8 @@ struct Result
   // Number of error values.
   size_t num_err = 0;
   // Location and value of the first error value.
-  size_t err_idx = -1;
-  std::string err_val;
+  size_t first_err_idx = -1;
+  std::string first_err_val;
 };
 
 //------------------------------------------------------------------------------
@@ -32,7 +35,7 @@ public:
 
   size_t size() const { return idx_; }
 
-  virtual void expand(size_t len) = 0;
+  virtual bool expand(size_t len) = 0;
   virtual Result parse(Column const& col) = 0;
   virtual PyObject* release() = 0;
 
@@ -62,33 +65,47 @@ public:
   BytesArray(BytesArray&&) = delete;
   BytesArray& operator=(BytesArray&&) = delete;
 
-  virtual void expand(
+  virtual bool expand(
     size_t const len)
   {
     if (len_ < len) {
       auto l = std::max(len_, 1ul);
+      // FIXME: Tune.
       while (l < len)
         l *= 2;
-      // FIXME: Tune.
       resize(l);
+      return true;
     }
+    else
+      return false;
   }
 
 
   virtual Result parse(
     Column const& col)
   {
+    Result res;
+
     for (auto field : col) {
+      auto const len = std::min(field.len, width_);
       auto const ptr = ptr_ + idx_ * stride_;
       // Copy the bytes in.
-      memcpy(ptr, field.ptr, field.len);
+      memcpy(ptr, field.ptr, len);
       // Zero out the rest of the field.
-      memset(ptr + field.len, 0, width_ - field.len);
+      memset(ptr + len, 0, width_ - len);
+
+      if (unlikely(field.len > width_)) {
+        if (res.num_err++ == 0) {
+          res.first_err_idx = idx_;
+          res.first_err_val = std::string(field.ptr, field.len);
+        }
+      }
+
       // Advance.
       ++idx_;
     }
 
-    return Result{};
+    return res;
   }
 
 

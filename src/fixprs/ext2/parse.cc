@@ -8,8 +8,16 @@
 
 //------------------------------------------------------------------------------
 
+struct ParseResult
+{
+  size_t num_resize = 0;
+  size_t total_resize = 0;
+};
+
+
 ArrayVec parse(Source& src, Config const& cfg)
 {
+  ParseResult res;
   ArrayVec arrs;
 
   // FIXME: cfg threading, including no threading.
@@ -30,20 +38,27 @@ ArrayVec parse(Source& src, Config const& cfg)
     std::vector<std::future<Result>> parse_results;
     for (size_t i = 0; i < split_result.cols.size(); ++i) {
       auto& arr = arrs[i];
-      arr->expand(arr->size() + split_result.num_rows);
+      if (arr->expand(arr->size() + split_result.num_rows))
+        res.num_resize += 1;
       auto& col = split_result.cols[i];
       parse_results.push_back(pool.enqueue([&] { return arr->parse(col); }));
     }
 
-    for (auto&& result : parse_results)
-      // FIXME: Do something with results.
-      result.get();
+    for (auto&& result : parse_results) {
+      auto r = result.get();
+      if (r.num_err > 0)
+        std::cerr << "ERRORS: count: " << r.num_err
+                  << " first idx: " << r.first_err_idx
+                  << " first val: " << r.first_err_val
+                  << "\n";
+    }
 
     src.advance(split_result.num_bytes);
 
     // FIXME: Can we split the next chunk while still parsing this one?
   }
 
+  std::cerr << "NUM RESIZE: " << res.num_resize << "\n";
   return arrs;
 }
 

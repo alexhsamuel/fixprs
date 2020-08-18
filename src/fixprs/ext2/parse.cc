@@ -23,7 +23,7 @@ std::vector<Array> parse(Source& src, Config const& cfg)
 
     // Extend arrays.
     while (arrays.size() < split_result.cols.size())
-      // FIXME
+      // FIXME: Empty overhang.
       arrays.emplace_back(32, cfg.initial_column_len);
 
     std::vector<std::future<Result>> parse_results;
@@ -35,21 +35,8 @@ std::vector<Array> parse(Source& src, Config const& cfg)
     }
 
     for (auto&& result : parse_results)
-      // FIXME: Do something with them.
+      // FIXME: Do something with results.
       result.get();
-
-    // for (size_t i = 0; i < split_results.cols.size(); ++i) {
-    //   arr.expand(...);
-    //
-    //   auto result = arrays[i].parse(cols[i]);
-    //   // FIXME: Handle result.
-    // }
-
-    // for (size_t c = 0; c < split_result.cols.size(); ++c)
-    //   // FIXME: Select columns to parse.
-    //   results.push_back(pool.enqueue(parse, &cols[c], arrs[c]));
-
-    // for (auto&& result : results)
 
     src.advance(split_result.num_bytes);
   }

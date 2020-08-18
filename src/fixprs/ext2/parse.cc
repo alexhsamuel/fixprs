@@ -3,13 +3,14 @@
 #include "array.hh"
 #include "column.hh"
 #include "config.hh"
+#include "parse.hh"
 #include "source.hh"
 
 //------------------------------------------------------------------------------
 
-std::vector<Array> parse(Source& src, Config const& cfg)
+ArrayVec parse(Source& src, Config const& cfg)
 {
-  std::vector<Array> arrays;
+  ArrayVec arrs;
 
   // FIXME: cfg threading, including no threading.
   ThreadPool pool{5};
@@ -21,17 +22,17 @@ std::vector<Array> parse(Source& src, Config const& cfg)
               << split_result.num_rows << " rows, "
               << split_result.cols.size() << " cols\n";
 
-    // Extend arrays.
-    while (arrays.size() < split_result.cols.size())
+    // Extend arrs.
+    while (arrs.size() < split_result.cols.size())
       // FIXME: Empty overhang.
-      arrays.emplace_back(32, cfg.initial_column_len);
+      arrs.emplace_back(std::make_unique<BytesArray>(cfg.initial_column_len, 32));
 
     std::vector<std::future<Result>> parse_results;
     for (size_t i = 0; i < split_result.cols.size(); ++i) {
-      auto& arr = arrays[i];
-      arr.expand(arr.size() + split_result.num_rows);
+      auto& arr = arrs[i];
+      arr->expand(arr->size() + split_result.num_rows);
       auto& col = split_result.cols[i];
-      parse_results.push_back(pool.enqueue([&] { return arr.parse(col); }));
+      parse_results.push_back(pool.enqueue([&] { return arr->parse(col); }));
     }
 
     for (auto&& result : parse_results)
@@ -43,7 +44,7 @@ std::vector<Array> parse(Source& src, Config const& cfg)
     // FIXME: Can we split the next chunk while still parsing this one?
   }
 
-  return arrays;
+  return arrs;
 }
 
 

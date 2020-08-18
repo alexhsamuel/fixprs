@@ -16,32 +16,55 @@ struct Result
   std::string err_val;
 };
 
+//------------------------------------------------------------------------------
+
 class Array
 {
 public:
 
-  Array(size_t const width, size_t const len);
-  ~Array();
+  Array(
+    size_t const len)
+  : len_(len),
+    idx_(0)
+  {}
 
-  Array(Array&& arr)
-  : width_(arr.width_)
-  , len_(arr.len_)
-  , idx_(arr.idx_)
-  , arr_(arr.arr_)
-  , ptr_(arr.ptr_)
-  , stride_(arr.stride_)
-  {
-    arr.ptr_ = nullptr;
-    arr.arr_ = nullptr;
-  }
-
-  Array(Array const&) = delete;
-  void operator=(Array const&) = delete;
-  Array& operator=(Array&& arr) = delete;
+  virtual ~Array() {}
 
   size_t size() const { return idx_; }
 
-  void expand(size_t const len) {
+  virtual void expand(size_t len) = 0;
+  virtual Result parse(Column const& col) = 0;
+  virtual PyObject* release() = 0;
+
+protected:
+
+  size_t len_;
+  size_t idx_;
+
+};
+
+//------------------------------------------------------------------------------
+
+/*
+ * Array for dtype kind 'S': bytes.
+ */
+class BytesArray
+: public Array
+{
+public:
+
+  BytesArray(size_t const len, size_t const width);
+  virtual ~BytesArray();
+
+  BytesArray(BytesArray const&) = delete;
+  void operator=(BytesArray const&) = delete;
+
+  BytesArray(BytesArray&&) = delete;
+  BytesArray& operator=(BytesArray&&) = delete;
+
+  virtual void expand(
+    size_t const len)
+  {
     if (len_ < len) {
       auto l = std::max(len_, 1ul);
       while (l < len)
@@ -51,9 +74,10 @@ public:
     }
   }
 
-  PyObject* release();
 
-  Result parse(Column const& col) {
+  virtual Result parse(
+    Column const& col)
+  {
     for (auto field : col) {
       auto const ptr = ptr_ + idx_ * stride_;
       // Copy the bytes in.
@@ -67,13 +91,14 @@ public:
     return Result{};
   }
 
+
+  virtual PyObject* release();
+
 private:
 
   void resize(size_t len);
 
   size_t width_;
-  size_t len_;
-  size_t idx_;
 
   PyObject* arr_;
   char* ptr_;
@@ -81,6 +106,4 @@ private:
 
 };
 
-
-extern Result parse_bytes(Column const& col, Array& arr);
 

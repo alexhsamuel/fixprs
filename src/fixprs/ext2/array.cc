@@ -11,12 +11,11 @@
 
 //------------------------------------------------------------------------------
 
-Array::Array(
-  size_t const width,
-  size_t const len)
-: width_(width)
-, len_(len)
-, idx_(0)
+BytesArray::BytesArray(
+  size_t const len,
+  size_t const width)
+: Array(len),
+  width_(width)
 {
   npy_intp l = len;
   arr_ = PyArray_New(
@@ -27,7 +26,7 @@ Array::Array(
 }
 
 
-Array::~Array() {
+BytesArray::~BytesArray() {
   ptr_ = nullptr;
   Py_XDECREF(arr_);
   arr_ = nullptr;
@@ -35,7 +34,7 @@ Array::~Array() {
 
 
 void
-Array::resize(
+BytesArray::resize(
   size_t const len)
 {
   assert(arr_ != nullptr);
@@ -53,7 +52,7 @@ Array::resize(
 
 
 PyObject*
-Array::release()
+BytesArray::release()
 {
   auto const arr = arr_;
 

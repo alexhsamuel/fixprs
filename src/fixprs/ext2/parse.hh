@@ -1,3 +1,4 @@
+#include <memory>
 #include <vector>
 
 #include "array.hh"
@@ -6,5 +7,7 @@
 
 //------------------------------------------------------------------------------
 
-extern std::vector<Array> parse(Source& src, Config const& cfg);
+using ArrayVec = std::vector<std::unique_ptr<Array>>;
+
+extern ArrayVec parse(Source& src, Config const& cfg);
 

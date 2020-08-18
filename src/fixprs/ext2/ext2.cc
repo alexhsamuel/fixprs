@@ -81,7 +81,7 @@ fn_parse_buffer(
     return nullptr;
   size_t i = 0;
   for (auto& arr : arrays)
-    PyList_SET_ITEM(res, i++, arr.release());
+    PyList_SET_ITEM(res, i++, arr->release());
 
   return res;
 }

@@ -1,10 +1,11 @@
 # Current plan
 
-- [x] benchmark setup vs. NumPy, Pandas
+- [ ] factor out array management from parsing (to support structs)
 - [ ] test cases with larger tables
-- [ ] put back threads
 - [ ] add float column
 
+- [x] benchmark setup vs. NumPy, Pandas
+- [x] put back threads
 
 # Upcoming
 

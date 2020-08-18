@@ -39,6 +39,8 @@ std::vector<Array> parse(Source& src, Config const& cfg)
       result.get();
 
     src.advance(split_result.num_bytes);
+
+    // FIXME: Can we split the next chunk while still parsing this one?
   }
 
   return arrays;

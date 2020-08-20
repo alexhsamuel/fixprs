@@ -33,7 +33,8 @@ ArrayVec parse(Source& src, Config const& cfg)
     // Extend arrs.
     while (arrs.size() < split_result.cols.size())
       // FIXME: Empty overhang.
-      arrs.emplace_back(std::make_unique<BytesArray>(cfg.initial_column_len, 32));
+      arrs.emplace_back(
+        std::make_unique<BytesArray>(cfg.initial_column_len, 32, cfg));
 
     std::vector<std::future<Result>> parse_results;
     for (size_t i = 0; i < split_result.cols.size(); ++i) {

@@ -13,9 +13,11 @@
 
 BytesArray::BytesArray(
   size_t const len,
-  size_t const width)
+  size_t const width,
+  Config const& cfg)
 : Array(len),
-  width_(width)
+  width_(width),
+  resize_cfg_(cfg.resize)
 {
   npy_intp l = len;
   arr_ = PyArray_New(

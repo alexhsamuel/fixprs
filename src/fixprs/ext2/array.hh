@@ -56,7 +56,7 @@ class BytesArray
 {
 public:
 
-  BytesArray(size_t const len, size_t const width);
+  BytesArray(size_t const len, size_t const width, Config const& cfg);
   virtual ~BytesArray();
 
   BytesArray(BytesArray const&) = delete;
@@ -116,6 +116,7 @@ private:
   void resize(size_t len);
 
   size_t width_;
+  ArrayResizeConfig resize_cfg_;
 
   PyObject* arr_;
   char* ptr_;

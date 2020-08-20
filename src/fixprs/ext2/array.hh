@@ -68,13 +68,19 @@ public:
   virtual bool expand(
     size_t const len)
   {
-    if (len_ < len) {
-      auto l = std::max(len_, 1ul);
-      // FIXME: Tune.
-      while (l < len)
-        l *= 2;
-      resize(l);
-      return true;
+    if (unlikely(len_ < len)) {
+      if (resize_cfg_.grow) {
+        auto l = len_;
+        while (l < len)
+          l = std::max(
+            (size_t) (l * resize_cfg_.grow_factor),
+            l + resize_cfg_.min_grow);
+        resize(l);
+        return true;
+      }
+      else
+        // FIXME: Error.
+        abort();
     }
     else
       return false;

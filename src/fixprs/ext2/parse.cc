@@ -46,6 +46,7 @@ ArrayVec parse(Source& src, Config const& cfg)
     }
 
     for (auto&& result : parse_results) {
+      // FIXME: Do something real with results.
       auto r = result.get();
       if (r.num_err > 0)
         std::cerr << "ERRORS: count: " << r.num_err

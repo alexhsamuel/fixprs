@@ -15,7 +15,7 @@ struct ParseResult
 };
 
 
-ArrayVec parse(Source& src, Config const& cfg)
+ArrayVec parse_source(Source& src, Config const& cfg)
 {
   ParseResult res;
   ArrayVec arrs;
@@ -34,12 +34,15 @@ ArrayVec parse(Source& src, Config const& cfg)
     while (arrs.size() < split_result.cols.size())
       // FIXME: Empty overhang.
       arrs.emplace_back(
-        std::make_unique<BytesArray>(cfg.initial_column_len, 32, cfg));
+        arrs.size() == 0
+        ? (std::unique_ptr<Array>) std::make_unique<BytesArray>(cfg.initial_column_len, 32, cfg)
+        : (std::unique_ptr<Array>) std::make_unique<Int64Array>(cfg.initial_column_len, cfg)
+        );
 
     std::vector<std::future<Result>> parse_results;
     for (size_t i = 0; i < split_result.cols.size(); ++i) {
       auto& arr = arrs[i];
-      if (arr->expand(arr->size() + split_result.num_rows))
+      if (arr->check_size(arr->size() + split_result.num_rows))
         res.num_resize += 1;
       auto& col = split_result.cols[i];
       parse_results.push_back(pool.enqueue([&] { return arr->parse(col); }));

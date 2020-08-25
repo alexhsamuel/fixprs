@@ -50,7 +50,7 @@ setuptools.setup(
     ext_modules     =[
         setuptools.Extension(
             "fixprs.ext2",
-            extra_compile_args  =["-std=c++14"],
+            extra_compile_args  =["-std=c++17"],
             include_dirs        =[
                 "./vendor/fast_double_parser/include",
                 "./vendor/ThreadPool",

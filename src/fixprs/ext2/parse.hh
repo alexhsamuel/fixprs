@@ -9,5 +9,5 @@
 
 using ArrayVec = std::vector<std::unique_ptr<Array>>;
 
-extern ArrayVec parse(Source& src, Config const& cfg);
+extern ArrayVec parse_source(Source& src, Config const& cfg);
 

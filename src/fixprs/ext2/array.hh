@@ -4,6 +4,7 @@
 #include <Python.h>
 
 #include "column.hh"
+#include "parse_int.hh"
 
 #define likely(x)      __builtin_expect(!!(x), 1)
 #define unlikely(x)    __builtin_expect(!!(x), 0)
@@ -26,20 +27,54 @@ class Array
 public:
 
   Array(
-    size_t const len)
-  : len_(len),
+    size_t const len,
+    Config const& cfg)
+  : resize_cfg_(cfg.resize),
+    len_(len),
     idx_(0)
-  {}
+  {
+  }
 
   virtual ~Array() {}
 
   size_t size() const { return idx_; }
 
-  virtual bool expand(size_t len) = 0;
+  virtual void resize(size_t len) = 0;
   virtual Result parse(Column const& col) = 0;
   virtual PyObject* release() = 0;
 
+  virtual void expand(
+    size_t const len)
+  {
+    if (resize_cfg_.grow) {
+      auto l = len_;
+      while (l < len)
+        l = std::max(
+          (size_t) (l * resize_cfg_.grow_factor),
+          l + resize_cfg_.min_grow);
+      resize(l);
+    }
+    else
+      // FIXME
+      abort();
+  }
+
+
+  bool check_size(
+    size_t const len)
+  {
+    if (unlikely(len_ < len)) {
+      expand(len);
+      return true;
+    }
+    else
+      return false;
+  }
+
+
 protected:
+
+  ArrayResizeConfig resize_cfg_;
 
   size_t len_;
   size_t idx_;
@@ -64,28 +99,6 @@ public:
 
   BytesArray(BytesArray&&) = delete;
   BytesArray& operator=(BytesArray&&) = delete;
-
-  virtual bool expand(
-    size_t const len)
-  {
-    if (unlikely(len_ < len)) {
-      if (resize_cfg_.grow) {
-        auto l = len_;
-        while (l < len)
-          l = std::max(
-            (size_t) (l * resize_cfg_.grow_factor),
-            l + resize_cfg_.min_grow);
-        resize(l);
-        return true;
-      }
-      else
-        // FIXME: Error.
-        abort();
-    }
-    else
-      return false;
-  }
-
 
   virtual Result parse(
     Column const& col)
@@ -115,14 +128,12 @@ public:
   }
 
 
+  virtual void resize(size_t len);
   virtual PyObject* release();
 
 private:
 
-  void resize(size_t len);
-
   size_t width_;
-  ArrayResizeConfig resize_cfg_;
 
   PyObject* arr_;
   char* ptr_;
@@ -130,4 +141,56 @@ private:
 
 };
 
+
+//------------------------------------------------------------------------------
+
+/*
+ * Array for dtype kind 'i': int64.
+ */
+class Int64Array
+: public Array
+{
+public:
+
+  Int64Array(size_t const len, Config const& cfg);
+  virtual ~Int64Array();
+
+  Int64Array(Int64Array const&) = delete;
+  void operator=(Int64Array const&) = delete;
+
+  Int64Array(Int64Array&&) = delete;
+  void operator=(Int64Array&&) = delete;
+
+  virtual Result parse(
+    Column const& col)
+  {
+    Result res;
+
+    for (auto field : col) {
+      auto const ptr = (long*) (ptr_ + idx_ * stride_);
+      auto const val = ::parse<int64_t>(field);
+      if (likely(val))
+        *ptr = *val;
+      else if (res.num_err++ == 0) {
+        res.first_err_idx = idx_;
+        res.first_err_val = std::string(field.ptr, field.len);
+      }
+
+      ++idx_;
+    }
+
+    return res;
+  }
+
+
+  virtual void resize(size_t len);
+  virtual PyObject* release();
+
+private:
+
+  PyObject* arr_;
+  char* ptr_;
+  size_t stride_;
+
+};
 

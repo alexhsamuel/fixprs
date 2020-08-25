@@ -1,6 +1,7 @@
 # Current plan
 
 - [ ] factor out array management from parsing (to support structs)
+- [ ] template the value parser
 - [ ] test cases with larger tables
 - [ ] add float column
 
@@ -43,6 +44,8 @@
   - bool (what choices?)
   - categorial
   - O array of str or bytes
+
+- Error value.
 
 - Skip columns: don't error-check, parse, or return
 

@@ -7,7 +7,5 @@
 
 //------------------------------------------------------------------------------
 
-using ArrayVec = std::vector<std::unique_ptr<Array>>;
-
-extern ArrayVec parse_source(Source& src, Config const& cfg);
+extern PyObject* parse_source(Source& src, Config const& cfg);
 

@@ -87,13 +87,20 @@ GEN0 = dataframe(
     uniform =uniform(),
 )
 
+GEN1 = dataframe(
+    label   =word(8, upper=True),
+    val0    =uniform_int(0,     10000),
+    val1    =uniform_int(0,   1000000),
+    val2    =uniform_int(0, 100000000),
+)
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("length", metavar="LEN", type=int)
     args = parser.parse_args()
 
-    df = GEN_4NORMALS(args.length)
+    df = GEN1(args.length)
     df.to_csv(sys.stdout, index=False)
 
 

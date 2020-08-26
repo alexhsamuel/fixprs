@@ -71,17 +71,9 @@ fn_parse_buffer(
   auto const pybuf = PyMemoryView_GET_BUFFER(memview);
   Buffer buf{static_cast<char const*>(pybuf->buf), (size_t) pybuf->len};
   BufferSource source{buf, cfg.chunk_size};
-  auto arrays = parse_source(source, cfg);
+  auto res = parse_source(source, cfg);
   
   Py_DECREF(memview);
-
-  // Extract and package up arrays.
-  auto res = PyList_New(arrays.size());
-  if (res == nullptr)
-    return nullptr;
-  size_t i = 0;
-  for (auto& arr : arrays)
-    PyList_SET_ITEM(res, i++, arr->release());
 
   return res;
 }

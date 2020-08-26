@@ -11,38 +11,56 @@
 
 //------------------------------------------------------------------------------
 
-struct Result
-{
-  // Number of error values.
-  size_t num_err = 0;
-  // Location and value of the first error value.
-  size_t first_err_idx = -1;
-  std::string first_err_val;
-};
-
-//------------------------------------------------------------------------------
-
-class Array
+class Target
 {
 public:
 
-  Array(
-    size_t const len,
+  using Ptr = std::pair<char*, size_t>;
+
+  Target(
+    size_t const initial_len,
     Config const& cfg)
-  : resize_cfg_(cfg.resize),
-    len_(len),
-    idx_(0)
+  : len_(initial_len),
+    resize_cfg_(cfg.resize)
   {
   }
 
-  virtual ~Array() {}
+  virtual ~Target() {};
 
-  size_t size() const { return idx_; }
+  virtual size_t num_cols() const = 0;
 
+  /* Adds a new col array with `typenum`.  */
+  virtual void add_col(int typenum, int itemsize=0) = 0;
+
+  /* Resizes the array to `len`.  */
   virtual void resize(size_t len) = 0;
-  virtual Result parse(Column const& col) = 0;
-  virtual PyObject* release() = 0;
 
+  /* Returns the pointer and stride for contents.  */
+  virtual Ptr get_pointer(size_t c) const = 0;
+
+  /* Releases the underlying array and invalidates this.  */
+  virtual PyObject* release(size_t len) = 0;
+
+  // FIXME: Move out, along with `expand` and `resize_cfg_`.
+  /*
+   * Confirms that the array accommodates `len`; if not, expands it.
+   */
+  bool check_size(
+    size_t const len)
+  {
+    if (unlikely(len_ < len)) {
+      expand(len);
+      return true;
+    }
+    else
+      return false;
+  }
+
+protected:
+
+  /*
+   * Expands the array to at least `len`.
+   */
   virtual void expand(
     size_t const len)
   {
@@ -59,138 +77,43 @@ public:
       abort();
   }
 
-
-  bool check_size(
-    size_t const len)
-  {
-    if (unlikely(len_ < len)) {
-      expand(len);
-      return true;
-    }
-    else
-      return false;
-  }
-
-
-protected:
-
-  ArrayResizeConfig resize_cfg_;
-
+  /* Current array length.  */
   size_t len_;
-  size_t idx_;
-
-};
-
-//------------------------------------------------------------------------------
-
-/*
- * Array for dtype kind 'S': bytes.
- */
-class BytesArray
-: public Array
-{
-public:
-
-  BytesArray(size_t const len, size_t const width, Config const& cfg);
-  virtual ~BytesArray();
-
-  BytesArray(BytesArray const&) = delete;
-  void operator=(BytesArray const&) = delete;
-
-  BytesArray(BytesArray&&) = delete;
-  BytesArray& operator=(BytesArray&&) = delete;
-
-  virtual Result parse(
-    Column const& col)
-  {
-    Result res;
-
-    for (auto field : col) {
-      auto const len = std::min(field.len, width_);
-      auto const ptr = ptr_ + idx_ * stride_;
-      // Copy the bytes in.
-      memcpy(ptr, field.ptr, len);
-      // Zero out the rest of the field.
-      memset(ptr + len, 0, width_ - len);
-
-      if (unlikely(field.len > width_)) {
-        if (res.num_err++ == 0) {
-          res.first_err_idx = idx_;
-          res.first_err_val = std::string(field.ptr, field.len);
-        }
-      }
-
-      // Advance.
-      ++idx_;
-    }
-
-    return res;
-  }
-
-
-  virtual void resize(size_t len);
-  virtual PyObject* release();
 
 private:
 
-  size_t width_;
-
-  PyObject* arr_;
-  char* ptr_;
-  size_t stride_;
+  ResizeConfig const resize_cfg_;
 
 };
 
 
 //------------------------------------------------------------------------------
 
-/*
- * Array for dtype kind 'i': int64.
- */
-class Int64Array
-: public Array
+class ArraysTarget
+: public Target
 {
 public:
 
-  Int64Array(size_t const len, Config const& cfg);
-  virtual ~Int64Array();
-
-  Int64Array(Int64Array const&) = delete;
-  void operator=(Int64Array const&) = delete;
-
-  Int64Array(Int64Array&&) = delete;
-  void operator=(Int64Array&&) = delete;
-
-  virtual Result parse(
-    Column const& col)
+  ArraysTarget(
+    size_t const initial_len,
+    Config const& cfg)
+  : Target(initial_len, cfg)
   {
-    Result res;
+  };
 
-    for (auto field : col) {
-      auto const ptr = (long*) (ptr_ + idx_ * stride_);
-      auto const val = ::parse<int64_t>(field);
-      if (likely(val))
-        *ptr = *val;
-      else if (res.num_err++ == 0) {
-        res.first_err_idx = idx_;
-        res.first_err_val = std::string(field.ptr, field.len);
-      }
-
-      ++idx_;
-    }
-
-    return res;
-  }
-
-
+  virtual ~ArraysTarget();
+  virtual size_t num_cols() const { return arrs_.size(); }
+  virtual void add_col(int typenum, int itemsize=0);
   virtual void resize(size_t len);
-  virtual PyObject* release();
+  virtual Ptr get_pointer(size_t col) const;
+  virtual PyObject* release(size_t len);
 
 private:
 
-  PyObject* arr_;
-  char* ptr_;
-  size_t stride_;
+  static PyObject* make_col(size_t col, size_t initial_len);
+
+  std::vector<PyObject*> arrs_;
 
 };
+
 

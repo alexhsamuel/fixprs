@@ -11,127 +11,80 @@
 
 //------------------------------------------------------------------------------
 
-BytesArray::BytesArray(
-  size_t const len,
-  size_t const width,
-  Config const& cfg)
-: Array(len, cfg),
-  width_(width)
+ArraysTarget::~ArraysTarget()
 {
-  npy_intp l = len;
-  arr_ = PyArray_New(
-    &PyArray_Type, 1, &l, NPY_STRING, nullptr, nullptr, width, 0, nullptr);
-  assert(arr_ != nullptr);  // FIXME
-  ptr_ = (char*) PyArray_DATA((PyArrayObject*) arr_);
-  stride_ = width;
-}
-
-
-BytesArray::~BytesArray() {
-  ptr_ = nullptr;
-  Py_XDECREF(arr_);
-  arr_ = nullptr;
+  for (auto&& arr : arrs_)
+    Py_XDECREF(arr);
 }
 
 
 void
-BytesArray::resize(
-  size_t const len)
+ArraysTarget::add_col(
+  int const type_num,
+  int const itemsize)
 {
-  assert(arr_ != nullptr);
+  npy_intp shape[1] = {(npy_intp) len_};
+  auto arr = PyArray_New(
+    &PyArray_Type, 1, shape, type_num, nullptr, nullptr, itemsize, 0, nullptr);
+  assert(arr != nullptr);  // FIXME
 
-  npy_intp shape[1] = {(npy_intp) len};
-  PyArray_Dims dims = { shape, 1 };
-  // FIXME: Not sure what the return value of PyArray_Resize is.  This function
-  // resizes the array in place.  
-  PyArray_Resize((PyArrayObject*) arr_, &dims, 0, NPY_CORDER);
-
-  len_ = len;
-  // Possibly new pointer to data.
-  ptr_ = (char*) PyArray_DATA((PyArrayObject*) arr_);
-}
-
-
-PyObject*
-BytesArray::release()
-{
-  auto const arr = arr_;
-
-  assert(arr != nullptr);
-  if (idx_ < len_) {
-    // Trim the array to length.
-    // FIXME: Slice rather than resize in some cases?
-    npy_intp shape[1] = {(npy_intp) idx_};
-    PyArray_Dims dims = { shape, 1 };
-    PyArray_Resize((PyArrayObject*) arr, &dims, 0, NPY_CORDER);
-  }
-
-  arr_ = nullptr;
-  ptr_ = nullptr;
-  return arr;
-}
-
-
-//------------------------------------------------------------------------------
-
-// FIXME: This is almost identical to the above.
-
-Int64Array::Int64Array(
-  size_t const len,
-  Config const& cfg)
-: Array(len, cfg)
-{
-  npy_intp l = len;
-  arr_ = PyArray_New(
-    &PyArray_Type, 1, &l, NPY_INT64, nullptr, nullptr, 0, 0, nullptr);
-  assert(arr_ != nullptr);  // FIXME
-  ptr_ = (char*) PyArray_DATA((PyArrayObject*) arr_);
-  stride_ = 8;
-}
-
-
-Int64Array::~Int64Array() {
-  ptr_ = nullptr;
-  Py_XDECREF(arr_);
-  arr_ = nullptr;
+  arrs_.push_back(arr);
 }
 
 
 void
-Int64Array::resize(
+ArraysTarget::resize(
   size_t const len)
 {
-  assert(arr_ != nullptr);
-
-  npy_intp shape[1] = {(npy_intp) len};
-  PyArray_Dims dims = { shape, 1 };
-  // FIXME: Not sure what the return value of PyArray_Resize is.  This function
-  // resizes the array in place.  
-  PyArray_Resize((PyArrayObject*) arr_, &dims, 0, NPY_CORDER);
+  for (auto arr : arrs_) {
+    npy_intp shape[1] = {(npy_intp) len};
+    PyArray_Dims dims = {shape, 1};
+    // FIXME: Not sure what the return value of PyArray_Resize is.  This
+    // function resizes the array in place.
+    PyArray_Resize((PyArrayObject*) arr, &dims, 0, NPY_CORDER);
+  }
 
   len_ = len;
-  // Possibly new pointer to data.
-  ptr_ = (char*) PyArray_DATA((PyArrayObject*) arr_);
+}
+
+
+ArraysTarget::Ptr
+ArraysTarget::get_pointer(
+  size_t const c)
+const
+{
+  auto const arr = (PyArrayObject*) arrs_[c];
+  return {(char*) PyArray_DATA(arr), PyArray_STRIDES(arr)[0]};
 }
 
 
 PyObject*
-Int64Array::release()
+ArraysTarget::release(
+  size_t const len)
 {
-  auto const arr = arr_;
+  assert(len <= len_);
 
-  assert(arr != nullptr);
-  if (idx_ < len_) {
-    // Trim the array to length.
-    // FIXME: Slice rather than resize in some cases?
-    npy_intp shape[1] = {(npy_intp) idx_};
-    PyArray_Dims dims = { shape, 1 };
-    PyArray_Resize((PyArrayObject*) arr, &dims, 0, NPY_CORDER);
+  // Extract and package up arrays.
+  auto arrs = PyTuple_New(arrs_.size());
+  if (arrs == nullptr)
+    return nullptr;
+
+  size_t i = 0;
+  for (auto&& arr : arrs_) {
+    if (len < len_) {
+      // FIXME: In some cases, slice instead of resizing?
+      npy_intp shape[1] = {(npy_intp) len};
+      PyArray_Dims dims = {shape, 1};
+      // FIXME: Not sure what the return value of PyArray_Resize is.  This
+      // function resizes the array in place.
+      PyArray_Resize((PyArrayObject*) arr, &dims, 0, NPY_CORDER);
+    }
+    
+    PyTuple_SET_ITEM(arrs, i++, arr);
   }
 
-  arr_ = nullptr;
-  ptr_ = nullptr;
-  return arr;
+  assert(arrs_.size() == 0);
+  return arrs;
 }
 
 

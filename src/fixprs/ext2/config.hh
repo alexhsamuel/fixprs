@@ -5,7 +5,7 @@
 /*
  * Configuration for how an array is dynamically resized.
  */
-struct ArrayResizeConfig
+struct ResizeConfig
 {
   /* Whether to grow the array if necessary when adding elements.  */
   bool grow = true;
@@ -33,7 +33,7 @@ struct Config
    */
   size_t initial_column_len = 0;
 
-  ArrayResizeConfig resize;
+  ResizeConfig resize;
 
 };
 

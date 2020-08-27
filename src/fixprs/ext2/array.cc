@@ -82,8 +82,8 @@ ArraysTarget::release(
     
     PyTuple_SET_ITEM(arrs, i++, arr);
   }
+  arrs_.clear();
 
-  assert(arrs_.size() == 0);
   return arrs;
 }
 

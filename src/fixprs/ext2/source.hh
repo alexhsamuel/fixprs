@@ -41,7 +41,7 @@ public:
 
   virtual void advance(size_t const len) {
     pos_ += len;
-    assert(pos_ < buf_.len);
+    assert(pos_ <= buf_.len);
   }
 
 private:

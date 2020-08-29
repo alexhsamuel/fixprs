@@ -27,6 +27,7 @@ public:
 
   virtual ~Target() {};
 
+  size_t length() const { return len_; }
   virtual size_t num_cols() const = 0;
 
   /* Adds a new col array with `typenum`.  */
@@ -41,41 +42,7 @@ public:
   /* Releases the underlying array and invalidates this.  */
   virtual PyObject* release(size_t len) = 0;
 
-  // FIXME: Move out, along with `expand` and `resize_cfg_`.
-  /*
-   * Confirms that the array accommodates `len`; if not, expands it.
-   */
-  bool check_size(
-    size_t const len)
-  {
-    if (unlikely(len_ < len)) {
-      expand(len);
-      return true;
-    }
-    else
-      return false;
-  }
-
 protected:
-
-  /*
-   * Expands the array to at least `len`.
-   */
-  virtual void expand(
-    size_t const len)
-  {
-    if (resize_cfg_.grow) {
-      auto l = len_;
-      while (l < len)
-        l = std::max(
-          (size_t) (l * resize_cfg_.grow_factor),
-          l + resize_cfg_.min_grow);
-      resize(l);
-    }
-    else
-      // FIXME
-      abort();
-  }
 
   /* Current array length.  */
   size_t len_;

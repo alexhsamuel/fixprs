@@ -162,9 +162,22 @@ parse_source(
       }
     }
       
+    // Resize target columns, if this batch doesn't fit.
     auto const new_r = r + split_result.num_rows;
-    if (target.check_size(new_r))
-      res.num_resize += 1;
+    if (unlikely(target.length() < new_r)) {
+      // FIXME: Encapsulate this.
+      if (cfg.resize.grow) {
+        auto l = target.length();
+        while (l < new_r)
+          l = std::max(
+            (size_t) (l * cfg.resize.grow_factor),
+            l + cfg.resize.min_grow);
+        target.resize(l);
+      }
+      else
+        // FIXME
+        abort();
+    }
 
     std::vector<std::future<ColResult>> parse_results;
     for (size_t c = 0; c < split_result.cols.size(); ++c) {

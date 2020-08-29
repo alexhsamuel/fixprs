@@ -1,6 +1,6 @@
 # Current plan
 
-- [ ] factor out array management from parsing (to support structs)
+- [x] factor out array management from parsing (to support structs)
 - [ ] template the value parser
 - [ ] test cases with larger tables
 - [ ] add float column

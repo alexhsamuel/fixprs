@@ -128,13 +128,33 @@ public:
 };
 
 
+size_t
+choose_new_size(
+  size_t const len,
+  size_t const new_len,
+  ResizeConfig const& cfg)
+{
+  if (cfg.grow) {
+    auto l = len;
+    while (l < new_len)
+      l = std::max(
+        (size_t) (l * cfg.grow_factor),
+        l + cfg.min_grow);
+    return l;
+  }
+  else
+    // FIXME
+    abort();
+}
+
+
 PyObject*
 parse_source(
   Source& src,
   Config const& cfg)
 {
   ParseResult res;
-  ArraysTarget target(0, cfg);
+  ArraysTarget target(0);
   std::vector<std::unique_ptr<Parser>> parsers;
   size_t r = 0;
 
@@ -164,20 +184,8 @@ parse_source(
       
     // Resize target columns, if this batch doesn't fit.
     auto const new_r = r + split_result.num_rows;
-    if (unlikely(target.length() < new_r)) {
-      // FIXME: Encapsulate this.
-      if (cfg.resize.grow) {
-        auto l = target.length();
-        while (l < new_r)
-          l = std::max(
-            (size_t) (l * cfg.resize.grow_factor),
-            l + cfg.resize.min_grow);
-        target.resize(l);
-      }
-      else
-        // FIXME
-        abort();
-    }
+    if (unlikely(target.length() < new_r))
+      target.resize(choose_new_size(target.length(), new_r, cfg.resize));
 
     std::vector<std::future<ColResult>> parse_results;
     for (size_t c = 0; c < split_result.cols.size(); ++c) {

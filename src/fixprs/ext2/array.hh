@@ -18,10 +18,8 @@ public:
   using Ptr = std::pair<char*, size_t>;
 
   Target(
-    size_t const initial_len,
-    Config const& cfg)
-  : len_(initial_len),
-    resize_cfg_(cfg.resize)
+    size_t const initial_len)
+  : len_(initial_len)
   {
   }
 
@@ -47,10 +45,6 @@ protected:
   /* Current array length.  */
   size_t len_;
 
-private:
-
-  ResizeConfig const resize_cfg_;
-
 };
 
 
@@ -62,9 +56,8 @@ class ArraysTarget
 public:
 
   ArraysTarget(
-    size_t const initial_len,
-    Config const& cfg)
-  : Target(initial_len, cfg)
+    size_t const initial_len)
+  : Target(initial_len)
   {
   };
 

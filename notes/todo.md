@@ -2,6 +2,10 @@
 
 - [x] factor out array management from parsing (to support structs)
 - [ ] template the value parser
+- [ ] float parser
+- [ ] bool parser
+- [ ] str 'U' parser
+- [ ] object str parser
 - [ ] test cases with larger tables
 - [ ] add float column
 

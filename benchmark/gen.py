@@ -87,7 +87,6 @@ GEN0 = dataframe(
     uniform =uniform(),
 )
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("length", metavar="LEN", type=int)

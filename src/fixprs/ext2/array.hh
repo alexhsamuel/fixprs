@@ -38,7 +38,7 @@ public:
   virtual Ptr get_pointer(size_t c) const = 0;
 
   /* Releases the underlying array and invalidates this.  */
-  virtual PyObject* release(size_t len) = 0;
+  virtual PyObject* release() = 0;
 
 protected:
 
@@ -66,7 +66,7 @@ public:
   virtual void add_col(int typenum, int itemsize=0);
   virtual void resize(size_t len);
   virtual Ptr get_pointer(size_t col) const;
-  virtual PyObject* release(size_t len);
+  virtual PyObject* release();
 
 private:
 

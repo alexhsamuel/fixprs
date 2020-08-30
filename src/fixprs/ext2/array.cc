@@ -59,29 +59,16 @@ const
 
 
 PyObject*
-ArraysTarget::release(
-  size_t const len)
+ArraysTarget::release()
 {
-  assert(len <= len_);
-
   // Extract and package up arrays.
   auto arrs = PyTuple_New(arrs_.size());
   if (arrs == nullptr)
     return nullptr;
 
   size_t i = 0;
-  for (auto&& arr : arrs_) {
-    if (len < len_) {
-      // FIXME: In some cases, slice instead of resizing?
-      npy_intp shape[1] = {(npy_intp) len};
-      PyArray_Dims dims = {shape, 1};
-      // FIXME: Not sure what the return value of PyArray_Resize is.  This
-      // function resizes the array in place.
-      PyArray_Resize((PyArrayObject*) arr, &dims, 0, NPY_CORDER);
-    }
-    
+  for (auto&& arr : arrs_)
     PyTuple_SET_ITEM(arrs, i++, arr);
-  }
   arrs_.clear();
 
   return arrs;

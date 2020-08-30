@@ -184,8 +184,10 @@ parse_source(
       
     // Resize target columns, if this batch doesn't fit.
     auto const new_r = r + split_result.num_rows;
-    if (unlikely(target.length() < new_r))
+    if (unlikely(target.length() < new_r)) {
       target.resize(choose_new_size(target.length(), new_r, cfg.resize));
+      ++res.num_resize;
+    }
 
     std::vector<std::future<ColResult>> parse_results;
     for (size_t c = 0; c < split_result.cols.size(); ++c) {
@@ -213,8 +215,13 @@ parse_source(
     // FIXME: Can we split the next chunk while still parsing this one?
   }
 
+  if (target.length() != r) {
+    target.resize(r);
+    ++res.num_resize;
+  }
+
   std::cerr << "NUM RESIZE: " << res.num_resize << "\n";
-  return target.release(r);
+  return target.release();
 }
 
 

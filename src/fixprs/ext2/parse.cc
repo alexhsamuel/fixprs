@@ -156,7 +156,7 @@ parse_source(
   Config const& cfg)
 {
   ParseResult res;
-  ArraysTarget target(0);
+  std::unique_ptr<Target> target = std::make_unique<ArraysTarget>(0);
   std::vector<std::unique_ptr<Parser>> parsers;
   size_t r = 0;
 
@@ -172,23 +172,23 @@ parse_source(
                 << split_result.cols.size() << " cols\n";
 
     // Add columns if necessary.
-    while (unlikely(target.num_cols() < split_result.cols.size())) {
-      auto const nc = target.num_cols();
+    while (unlikely(target->num_cols() < split_result.cols.size())) {
+      auto const nc = target->num_cols();
       // FIXME: For testing only.
       if (nc == 0) {
-        target.add_col(NPY_STRING, 32);
+        target->add_col(NPY_STRING, 32);
         parsers.emplace_back(std::make_unique<BytesParser>(32));
       }
       else {
-        target.add_col(NPY_INT64);
+        target->add_col(NPY_INT64);
         parsers.emplace_back(std::make_unique<Int64Parser>());
       }
     }
       
     // Resize target columns, if this batch doesn't fit.
     auto const new_r = r + split_result.num_rows;
-    if (unlikely(target.length() < new_r)) {
-      target.resize(choose_new_size(target.length(), new_r, cfg.resize));
+    if (unlikely(target->length() < new_r)) {
+      target->resize(choose_new_size(target->length(), new_r, cfg.resize));
       ++res.num_resize;
     }
 
@@ -197,7 +197,7 @@ parse_source(
       auto& col = split_result.cols[c];
       auto parser = parsers[c].get();
       parse_results.push_back(pool.enqueue([&col, parser, &target, c, r] {
-        return parser->parse(col, target.get_pointer(c), r);
+        return parser->parse(col, target->get_pointer(c), r);
       }));
     }
     // FIXME: What if there are fewer split cols than cols in the target?
@@ -219,14 +219,14 @@ parse_source(
     // FIXME: Can we split the next chunk while still parsing this one?
   }
 
-  if (target.length() != r) {
-    target.resize(r);
+  if (target->length() != r) {
+    target->resize(r);
     ++res.num_resize;
   }
 
   if (DEBUG_PRINT)
     std::cerr << "NUM RESIZE: " << res.num_resize << "\n";
-  return target.release();
+  return target->release();
 }
 
 

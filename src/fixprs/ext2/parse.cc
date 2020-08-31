@@ -18,6 +18,10 @@
 
 //------------------------------------------------------------------------------
 
+// A vector of managed heap-allocated objects.
+template<class T>
+using PtrVec = std::vector<std::unique_ptr<T>>;
+
 struct ParseResult
 {
   size_t num_resize = 0;
@@ -150,14 +154,38 @@ choose_new_size(
 }
 
 
+/*
+ * Adds a column to `target` and a corresponding parser to `parsers`.
+ */
+void
+add_column(
+  Target& target,
+  PtrVec<Parser>& parsers)
+{
+  // FIXME: This logic for testing only.
+  auto const nc = target.num_cols();
+  if (nc == 0) {
+    target.add_col(NPY_STRING, 32);
+    parsers.emplace_back(std::make_unique<BytesParser>(32));
+  }
+  else {
+    target.add_col(NPY_INT64);
+    parsers.emplace_back(std::make_unique<Int64Parser>());
+  }
+}
+
+
 PyObject*
 parse_source(
   Source& src,
   Config const& cfg)
 {
   ParseResult res;
+
+  // The output target for parsed data, and a parallel vector of parsers.
   std::unique_ptr<Target> target = std::make_unique<ArraysTarget>(0);
-  std::vector<std::unique_ptr<Parser>> parsers;
+  PtrVec<Parser> parsers;
+
   size_t r = 0;
 
   // FIXME: cfg threading, including no threading.
@@ -172,18 +200,9 @@ parse_source(
                 << split_result.cols.size() << " cols\n";
 
     // Add columns if necessary.
-    while (unlikely(target->num_cols() < split_result.cols.size())) {
-      auto const nc = target->num_cols();
-      // FIXME: For testing only.
-      if (nc == 0) {
-        target->add_col(NPY_STRING, 32);
-        parsers.emplace_back(std::make_unique<BytesParser>(32));
-      }
-      else {
-        target->add_col(NPY_INT64);
-        parsers.emplace_back(std::make_unique<Int64Parser>());
-      }
-    }
+    while (unlikely(target->num_cols() < split_result.cols.size()))
+      add_column(*target.get(), parsers);
+    assert(target->num_cols() == parsers.size());
       
     // Resize target columns, if this batch doesn't fit.
     auto const new_r = r + split_result.num_rows;

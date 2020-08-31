@@ -14,6 +14,8 @@
 #include "parse_int.hh"
 #include "source.hh"
 
+#define DEBUG_PRINT false
+
 //------------------------------------------------------------------------------
 
 struct ParseResult
@@ -163,10 +165,11 @@ parse_source(
 
   for (auto buf = src.get_next(); buf.len > 0; buf = src.get_next()) {
     auto split_result = split_columns(buf, cfg);
-    std::cerr << "split "
-              << split_result.num_bytes << " bytes, "
-              << split_result.num_rows << " rows, "
-              << split_result.cols.size() << " cols\n";
+    if (DEBUG_PRINT)
+      std::cerr << "split "
+                << split_result.num_bytes << " bytes, "
+                << split_result.num_rows << " rows, "
+                << split_result.cols.size() << " cols\n";
 
     // Add columns if necessary.
     while (unlikely(target.num_cols() < split_result.cols.size())) {
@@ -203,10 +206,11 @@ parse_source(
       // FIXME: Do something real with results.
       auto r = result.get();
       if (r.num_err > 0)
-        std::cerr << "ERRORS: count: " << r.num_err
-                  << " first idx: " << r.first_err_idx
-                  << " first val: " << r.first_err_val
-                  << "\n";
+        if (DEBUG_PRINT)
+          std::cerr << "ERRORS: count: " << r.num_err
+                    << " first idx: " << r.first_err_idx
+                    << " first val: " << r.first_err_val
+                    << "\n";
     }
 
     src.advance(split_result.num_bytes);
@@ -220,7 +224,8 @@ parse_source(
     ++res.num_resize;
   }
 
-  std::cerr << "NUM RESIZE: " << res.num_resize << "\n";
+  if (DEBUG_PRINT)
+    std::cerr << "NUM RESIZE: " << res.num_resize << "\n";
   return target.release();
 }
 

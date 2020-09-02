@@ -1,5 +1,8 @@
 #pragma once
 
+#include <Python.h>
+#include <vector>
+
 //------------------------------------------------------------------------------
 
 /*
@@ -21,6 +24,29 @@ struct ResizeConfig
 };
 
 
+struct ColumnConfig
+{
+  ColumnConfig() {}
+  ~ColumnConfig() { Py_XDECREF(descr); }
+
+  ColumnConfig(ColumnConfig const&) = delete;
+  void operator=(ColumnConfig const&) = delete;
+
+  ColumnConfig(ColumnConfig&& o) = default;  // FIXME
+  ColumnConfig constexpr& operator=(ColumnConfig&&) = default;
+
+  PyObject* descr = nullptr;  // Owns a reference, or nullptr.
+
+};
+
+
+struct ColumnsConfig
+{
+  std::vector<ColumnConfig> cols;
+  ColumnConfig def;
+};
+
+
 struct Config
 {
   /* Size in bytes of chunk to process at one time from source. */
@@ -35,6 +61,10 @@ struct Config
 
   ResizeConfig resize;
 
+  ColumnConfig col;  // FIXME: Should be columns!
+
 };
 
+
+extern int parse_config(PyObject*, Config*);
 

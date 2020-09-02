@@ -1,11 +1,10 @@
-#include "ThreadPool.h"
-
-// FIXME: Hopefully not needed in the future.
 #define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_API_VERSION
 #define PY_ARRAY_UNIQUE_SYMBOL FIXPRS_ARRAY_API
 #include <numpy/arrayobject.h>
 #include <numpy/npy_3kcompat.h>
+
+#include "ThreadPool.h"
 
 #include "array.hh"
 #include "column.hh"
@@ -159,19 +158,25 @@ choose_new_size(
  */
 void
 add_column(
+  ColumnConfig const& cfg,
   Target& target,
   PtrVec<Parser>& parsers)
 {
-  // FIXME: This logic for testing only.
-  auto const nc = target.num_cols();
-  if (nc == 0) {
-    target.add_col(NPY_STRING, 32);
-    parsers.emplace_back(std::make_unique<BytesParser>(32));
+  PyArray_Descr* descr = (PyArray_Descr*) cfg.descr;
+
+  // FIXME: This is not the right place.
+  if (descr == nullptr) {
+    descr = PyArray_DescrNewFromType(NPY_STRING);
+    descr->elsize = 32;
   }
-  else {
-    target.add_col(NPY_INT64);
+
+  target.add_col((PyObject*) descr);
+  if (descr->kind == 'S')
+    parsers.emplace_back(std::make_unique<BytesParser>(descr->elsize));
+  else if (descr->kind == 'i' && descr->elsize == 8)
     parsers.emplace_back(std::make_unique<Int64Parser>());
-  }
+  else
+    abort();
 }
 
 
@@ -201,7 +206,7 @@ parse_source(
 
     // Add columns if necessary.
     while (unlikely(target->num_cols() < split_result.cols.size()))
-      add_column(*target.get(), parsers);
+      add_column(cfg.col, *target.get(), parsers);
     assert(target->num_cols() == parsers.size());
       
     // Resize target columns, if this batch doesn't fit.

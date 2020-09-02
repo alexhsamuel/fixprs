@@ -20,12 +20,15 @@ ArraysTarget::~ArraysTarget()
 
 void
 ArraysTarget::add_col(
-  int const type_num,
-  int const itemsize)
+  PyObject* descr)
 {
+  assert(descr != nullptr);
+
   npy_intp shape[1] = {(npy_intp) len_};
-  auto arr = PyArray_New(
-    &PyArray_Type, 1, shape, type_num, nullptr, nullptr, itemsize, 0, nullptr);
+  auto arr = PyArray_NewFromDescr(
+    &PyArray_Type, (PyArray_Descr*) descr,
+    1, shape,
+    nullptr, nullptr, 0, nullptr);
   assert(arr != nullptr);  // FIXME
 
   arrs_.push_back(arr);

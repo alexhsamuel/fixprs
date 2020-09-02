@@ -29,7 +29,7 @@ public:
   virtual size_t num_cols() const = 0;
 
   /* Adds a new col array with `typenum`.  */
-  virtual void add_col(int typenum, int itemsize=0) = 0;
+  virtual void add_col(PyObject* descr) = 0;
 
   /* Resizes the array to `len`.  */
   virtual void resize(size_t len) = 0;
@@ -63,7 +63,7 @@ public:
 
   virtual ~ArraysTarget();
   virtual size_t num_cols() const { return arrs_.size(); }
-  virtual void add_col(int typenum, int itemsize=0);
+  virtual void add_col(PyObject* descr);
   virtual void resize(size_t len);
   virtual Ptr get_pointer(size_t col) const;
   virtual PyObject* release();

@@ -1,6 +1,8 @@
 # Current plan
 
 - [x] factor out array management from parsing (to support structs)
+- [ ] configure column dtypes/parsers
+- [ ] clean up NumPy CAPI import
 - [ ] template the value parser
 - [ ] float parser
 - [ ] bool parser

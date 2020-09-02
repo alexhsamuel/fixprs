@@ -56,17 +56,22 @@ fn_parse_buffer(
   PyObject* const args,
   PyObject* const kw_args)
 {
-  static char const* const keywords[] = {"obj", nullptr};
+  static char const* const keywords[] = {"obj", "cfg", nullptr};
   PyObject* obj;
+  PyObject* cfg_dict = nullptr;
 
-  if (!PyArg_ParseTupleAndKeywords(args, kw_args, "O", (char**) keywords, &obj))
+  if (!PyArg_ParseTupleAndKeywords(
+        args, kw_args, "O|O!", (char**) keywords,
+        &obj, &PyDict_Type, cfg_dict))
+    return nullptr;
+
+  Config cfg;
+  if (cfg_dict != nullptr && parse_config(cfg_dict, &cfg) != 0)
     return nullptr;
 
   auto const memview = PyMemoryView_FromObject(obj);
   if (memview == nullptr)
     return nullptr;
-
-  Config cfg;
 
   auto const pybuf = PyMemoryView_GET_BUFFER(memview);
   Buffer buf{static_cast<char const*>(pybuf->buf), (size_t) pybuf->len};

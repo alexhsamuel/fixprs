@@ -14,6 +14,9 @@
 
 # Upcoming
 
+- https://github.com/fastfloat/fast_float
+  - https://lemire.me/blog/2021/01/29/number-parsing-at-a-gigabyte-per-second/
+
 - [ ] `parse()`
   - [ ] auto dtype
   - [ ] pass in dtypes
@@ -24,7 +27,7 @@
   - [ ] integrate ASCII decoder
   - [ ] integrate UTF-8 decoder
   - [ ] general Python decoder
-  
+
 - [ ] fix `std::experimental::optional`
 
 - [ ] parse to recarray
